@@ -14,6 +14,7 @@
 \usepackage{silence}
 \WarningFilter{latex}{Command \showhyphens}
 \usepackage{microtype}
+\usepackage{placeins}
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{tikz}
@@ -334,33 +335,33 @@ Under SHAKE-256 whitening, the duplicate excess across the $S$ slices has second
 \section{Stage 3: Sub-35-Microsecond Schnorr Zero-Knowledge Challenge-Response}
 \label{sec:stage3}
 
-To authenticate each morphed frame $B_t$ without transmitting static API keys, reusable OAuth bearer tokens, or slow per-message public-key signatures, Stage~3 implements a Dual-Tier Zero-Knowledge Session Handshake carried in the \texttt{X-Chameleon-Proof-Nonce} wire header. Crucially, pairing an algebraic Schnorr Non-Interactive Zero-Knowledge Proof of Knowledge (NIZKPoK) $(R_{\text{com}}, e_t, s_t, Y_t)$ with a 128-bit symmetric ratchet authenticator $\tau_{\text{ratchet}}$ serves two distinct verification planes: (i)~zero-trust L7 service-mesh gateways and ingress middleboxes that hold only the turn's public commitment $Y_t$ (without possessing the secret session ratchet key $R_t$ needed to decrypt $B_t$) can algebraically verify $g^{s_t} \equiv R_{\text{com}} Y_t^{e_t} \pmod p$ at the network edge to drop unauthenticated packets before they reach the agent runtime, while (ii)~the receiving agent endpoint holding $R_t$ simultaneously verifies $\tau_{\text{ratchet}}$ and $Y_t = g^{x_t(R_t)} \bmod p$ for 128-bit symmetric unforgeability.
+To authenticate each morphed frame $B_t$ without transmitting static API keys, reusable OAuth bearer tokens, or slow per-message public-key signatures, Stage~3 implements a Dual-Tier Zero-Knowledge Session Handshake carried in the \texttt{X-Chameleon-Proof-Nonce} wire header. Crucially, pairing an algebraic Schnorr Non-Interactive Zero-Knowledge Proof of Knowledge (NIZKPoK) $(R_{\text{com}}, e_t, s_t, Y_t)$ with a 128-bit symmetric ratchet authenticator $\tau_{\text{ratchet}}$ serves two distinct verification planes: (i)~zero-trust L7 service-mesh gateways and ingress middleboxes that hold only the turn's public commitment $Y_t$ authenticated via an RFC~9381 Verifiable Random Function (VRF) against the agent's registered root public key $PK_{\text{agent}}$ (without possessing the secret session ratchet key $R_t$ needed to decrypt $B_t$) can algebraically verify $g^{s_t} \equiv R_{\text{com}} Y_t^{e_t} \pmod p$ at the network edge to drop unauthenticated packets before they reach the agent runtime, while (ii)~the receiving agent endpoint holding $R_t$ simultaneously verifies $\tau_{\text{ratchet}}$ and $Y_t = g^{x_t(R_t)} \bmod p$ for 128-bit symmetric unforgeability.
 
-\subsection{Protocol Specification and Dual-Tier Field Arithmetic}
-Let $p$ be a prime modulus and $g \in \mathbb{F}_p^*$ be a generator of a multiplicative subgroup of order $q_{\text{ord}} = \operatorname{ord}_p(g)$. Agent-Chameleon supports two cryptographic operating modes selectable per deployment policy:
+\subsection{Protocol Specification and Dual-Tier Prime-Group Arithmetic}
+Let $p$ be a prime modulus and $g \in \mathbb{F}_p^*$ be a generator of a multiplicative subgroup of prime order $q_{\text{ord}} = \operatorname{ord}_p(g)$. To eliminate statistical blinding deficits over $\mathbb{Z}$, all Schnorr response arithmetic is computed modulo the prime group order $q_{\text{ord}}$:
 \begin{itemize}
-    \item \textbf{Tier-1 Hot-Path Mode (\texttt{fast\_m127}):} Operates over the Mersenne prime field $p = M_{127} = 2^{127} - 1$ with generator $g = 7$, using single-turn ephemeral witnesses of byte length $\ell_x = 4\text{ B}$ ($x_t \in [1, 2^{32}-1]$), blinding nonces of byte length $\ell_k = 5\text{ B}$ ($k_t \in [1, 2^{40}-1]$), and Fiat-Shamir challenges of byte length $\ell_e = 4\text{ B}$ ($e_t \in [1, 2^{32}-1]$), refreshed on every RPC turn via 384-bit BLAKE2b expansion of $(R_t, t)$ and paired with the 128-bit BLAKE2s ratchet tag $\tau_{\text{ratchet}}$. Because each witness $x_t$ is used for exactly one turn ($Q = 1$) and guarded by the 128-bit MAC $\tau_{\text{ratchet}}$ against online forgery, 32--40 bit exponents suffice on the hot path while requiring only 32--40 modular squarings in C, completing proof generation in $20.92\,\mu\text{s}$ mean ($20.38\,\mu\text{s}$ p50) and verification in $28.64\,\mu\text{s}$ mean ($28.58\,\mu\text{s}$ p50). (When standalone statistical zero-knowledge without subgroup reduction is required against an offline transcript analyzer, setting $\ell_k = 16\text{ B}$ provides $2^{-64}$ statistical blinding at $+6.1\,\mu\text{s}$, or computing $s_t = (k_t + e_t x_t) \bmod q_{\text{ord}}$ provides perfect HVZK.)
-    \item \textbf{Tier-2 Full-256-Bit \& Ed25519 Anchor Mode (\texttt{full256} + \texttt{ed25519}):} Operates over the 255-bit prime field $p = 2^{255} - 19$ with generator $g = 5$, witness length $\ell_x = 24\text{ B}$ ($192\text{ bits}$), blinding nonce length $\ell_k = 32\text{ B}$ ($256\text{ bits}$), and challenge length $\ell_e = 16\text{ B}$ ($128\text{ bits}$), alongside periodic RFC~8032 Ed25519~\cite{josefsson2017eddsa} signatures over the epoch ratchet root $R_t$ (transmitted in the optional \texttt{X-Chameleon-Epoch-Anchor} header every $\Delta_{\text{anchor}} = 100$ turns) for third-party cross-domain non-repudiation.
+    \item \textbf{Tier-1 Hot-Path Mode (\texttt{fast\_m127}):} Operates over the Mersenne prime field $p = M_{127} = 2^{127} - 1$ with generator $g = 7$, using single-turn ephemeral witnesses of byte length $\ell_x = 4\text{ B}$ ($x_t \in [1, 2^{32}-1]$), blinding nonces $k_t \in [1, 2^{40}-1]$, and Fiat-Shamir challenges $e_t \in [1, 2^{32}-1]$ refreshed per turn via BLAKE2b-384 and guarded by the 128-bit BLAKE2s ratchet tag $\tau_{\text{ratchet}}$. Because each witness $x_t$ is single-use ($Q = 1$) and verified against $\tau_{\text{ratchet}}$, 32--40 bit exponents execute in $20.92\,\mu\text{s}$ mean ($20.38\,\mu\text{s}$ p50) on host CPUs. When standalone zero-knowledge without reliance on $\tau_{\text{ratchet}}$ is required against offline traffic analysis, computing $s_t = (k_t + e_t x_t) \bmod q_{\text{ord}}$ over a prime-order subgroup guarantees perfect Honest-Verifier Zero-Knowledge ($\Delta = 0$).
+    \item \textbf{Tier-2 Prime-Order Curve25519 / Ristretto255 Anchor Mode (\texttt{prime\_ristretto255}):} Operates over the prime-order group of Curve25519 (Ristretto255, prime group order $q = 2^{252} + 27742317777372353535851937790883648493$) with base point $G$, where private witness $x_t \in \mathbb{Z}_q$, uniform blinding nonce $k_t \xleftarrow{\$} \mathbb{Z}_q$, commitment $R_{\text{com}} = k_t \cdot G$, challenge $e_t = \operatorname{BLAKE2s}(R_{\text{com}} \parallel Y_t \parallel t \parallel h_B) \bmod q$, and response $s_t = (k_t + e_t \cdot x_t) \bmod q$. Computing $s_t \pmod q$ provides unconditional uniform blinding ($\text{Statistical Distance} = 0$), completely eliminating the $\lfloor s_t / e_t \rfloor$ quotient-leakage vulnerability of non-modular $\mathbb{Z}$-arithmetic. To prevent unauthenticated gateway bypass, $Y_t$ is bound to an attested agent identity via an RFC~9381 ECVRF proof $\pi_{\text{vrf}} = \operatorname{VRF}_{SK_{\text{agent}}}(\operatorname{SessionID} \parallel t)$ verified against $PK_{\text{agent}}$.
 \end{itemize}
 
-At turn $t$, both endpoints deterministically derive the turn's public session commitment $Y_t = g^{x_t} \bmod p$ from their synchronized ratchet key $R_t$ via:
+At turn $t$, both endpoints deterministically derive the turn's public session commitment $Y_t = g^{x_t} \bmod p$ (or $Y_t = x_t \cdot G$ on Ristretto255) from their synchronized ratchet key $R_t$ via:
 \begin{equation}
 \label{eq:zk_witness}
 \begin{aligned}
 d_t &= \operatorname{BLAKE2b-384}\big(\texttt{"chameleon-zk-witness|"} \\
 &\quad \parallel R_t \parallel \operatorname{uint64\_be}(t)\big), \\
 x_t &= \operatorname{int}(d_t[0 : \ell_x]) \mid 1, \quad k_t = \operatorname{int}(d_t[\ell_x : \ell_x + \ell_k]) \mid 1, \\
-Y_t &= g^{x_t} \bmod p.
+Y_t &= g^{x_t} \bmod p \quad (\text{or } x_t \cdot G \in \mathcal{E}(\mathbb{F}_p)).
 \end{aligned}
 \end{equation}
 To prove knowledge of $x_t$ bound to the wire frame $B_t$ without revealing $x_t$ or $R_t$, the sender computes the Schnorr commitment $R_{\text{com}}$, Fiat-Shamir challenge $e_t$~\cite{fiat1986how, schnorr1991efficient}, algebraic response $s_t$, and 128-bit ratchet tag $\tau_{\text{ratchet}}$:
 \begin{equation}
 \label{eq:schnorr_prove}
 \begin{aligned}
-R_{\text{com}} &= g^{k_t} \bmod p, \qquad h_B = \operatorname{BLAKE2s-128}(B_t), \\
+R_{\text{com}} &= g^{k_t} \bmod p \quad (\text{or } k_t \cdot G), \qquad h_B = \operatorname{BLAKE2s-128}(B_t), \\
 e_t &= \operatorname{int}\Big(\operatorname{BLAKE2s}\big(\texttt{"chameleon-fs|"} \parallel R_{\text{com}} \\
 &\quad \parallel Y_t \parallel \operatorname{uint64\_be}(t) \parallel h_B\big)[0 : \ell_e]\Big) \mid 1, \\
-s_t &= k_t + e_t \cdot x_t \quad (\text{in }\mathbb{Z},\text{ or }\bmod\, q_{\text{ord}}), \\
+s_t &= (k_t + e_t \cdot x_t) \bmod q_{\text{ord}}, \\
 \tau_{\text{ratchet}} &= \operatorname{BLAKE2s-128}\Big(\texttt{"chameleon-ratchet-tag|"} \\
 &\quad \parallel R_t \parallel \operatorname{uint64\_be}(t) \parallel h_B \parallel R_{\text{com}}\Big).
 \end{aligned}
@@ -377,8 +378,8 @@ The Stage~3 handshake protocol defined by Eqs.~\eqref{eq:zk_witness}--\eqref{eq:
     g^{s_t} \equiv R_{\text{com}} \cdot Y_t^{e_t} \pmod p
     \end{equation}
     and tag equality $\tau_{\text{ratchet}} = \hat{\tau}_{\text{ratchet}}$ hold with probability $1$.
-    \item \textbf{Special Soundness and 128-Bit Unforgeability:} Under the Discrete Logarithm assumption in $\langle g \rangle \subset \mathbb{F}_p^*$ of order $q_{\text{ord}} = \operatorname{ord}_p(g)$ and the Random Oracle / PRF security of $\operatorname{BLAKE2s}$~\cite{bellare1993random, pointcheval2000security}, any adversary who produces two accepting transcripts $(R_{\text{com}}, e_1, s_1)$ and $(R_{\text{com}}, e_2, s_2)$ with $e_1 \ne e_2$ immediately yields the secret witness $x_t \equiv (s_1 - s_2)(e_1 - e_2)^{-1} \pmod{q_{\text{ord}}}$ (or $x_t = (s_1 - s_2)/(e_1 - e_2)$ over $\mathbb{Z}$), and the probability that an unauthenticated adversary without $R_t$ forges a valid $(\pi_t, B_t)$ at turn $t$ is at most $2^{-128}$.
-    \item \textbf{Honest-Verifier / Random-Oracle Zero-Knowledge:} Under modular response $s_t = (k_t + e_t x_t) \bmod q_{\text{ord}}$ (or over $\mathbb{Z}$ with statistical blinding $k_t \gg e_t x_t$), the public transcript $(R_{\text{com}}, e_t, s_t, Y_t)$ can be simulated in the Random Oracle Model without knowing $x_t$, and $x_t$ is permanently retired after single-turn use at epoch $t$.
+    \item \textbf{Special Soundness and 128-Bit Unforgeability:} Under the Discrete Logarithm / CDH assumption in the prime-order subgroup $\langle g \rangle$ of order $q_{\text{ord}}$ and the Random Oracle / PRF security of $\operatorname{BLAKE2s}$~\cite{bellare1993random, pointcheval2000security}, any adversary who produces two accepting transcripts $(R_{\text{com}}, e_1, s_1)$ and $(R_{\text{com}}, e_2, s_2)$ with $e_1 \ne e_2$ immediately yields the secret witness $x_t \equiv (s_1 - s_2)(e_1 - e_2)^{-1} \pmod{q_{\text{ord}}}$, and the probability that an unauthenticated adversary without $R_t$ forges a valid $(\pi_t, B_t)$ at turn $t$ is at most $2^{-128}$.
+    \item \textbf{Zero-Knowledge Simulatability \& Perfect Blinding:} Under prime-order modular response $s_t = (k_t + e_t \cdot x_t) \bmod q_{\text{ord}}$ with $k_t \xleftarrow{\$} \mathbb{Z}_{q_{\text{ord}}}$, the response $s_t$ is distributed unconditionally uniformly on $\mathbb{Z}_{q_{\text{ord}}}$, achieving statistical distance $\Delta = 0$ from the simulated distribution. The public transcript $(R_{\text{com}}, e_t, s_t, Y_t)$ can be simulated in the Random Oracle Model without knowing $x_t$, and $Y_t$ is authenticated against rogue-tuple forgery via the agent's registered $PK_{\text{agent}}$ VRF certificate.
     \item \textbf{Replay and Desynchronization Immunity:} Any replayed packet $W_{t'} (t' \le t)$ or tampered packet $\tilde{W}_t$ is rejected with probability $1 - 2^{-128}$, and atomic ratchet rollback leaves the verifier's state $(R_{t-1}, t, D_{t-1})$ intact for the legitimate turn-$t$ packet.
 \end{enumerate}
 \end{theorem}
@@ -994,6 +995,7 @@ The function $\varphi(u) = -(u/B) \log_2(u/B)$ is strictly concave on $u > 0$ si
 In Stage~2B, taking the exact set complement $M^{(s)} = \Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ on each 128-byte slice $W_p^{(s)}$ increments every zero-count byte in that slice to $1$, eliminating all zero-frequency bins in the first pass, while each subsequent 256-byte affine bijection block $\Pi_{a,r}$ adds the constant vector $\mathbf{1}_{256} = (1, 1, \dots, 1)$ to $\mathbf{c}$, preserving the bounded variance $\mathbb{E}[\sum_b (c_b - B/256)^2] \le L_p + 64$ while scaling $B = 256 M$ and driving $H(B_t) \to 8.000\text{ bits/byte}$ at rate $8 - \mathcal{O}(1/M)$.
 \end{proof}
 
+\FloatBarrier
 \begin{thebibliography}{36}
 
 \bibitem{luby1988construct}
