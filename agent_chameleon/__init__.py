@@ -1,0 +1,80 @@
+"""
+Agent-Chameleon: Dynamic Protocol Morphing, Goal-Conditioned Schema Permutation,
+and Zero-Knowledge Session Handshakes for Multi-Agent Swarm Communications.
+
+Author: Aniket Agrawal (aniketagrawal@google.com, Google Cloud AI)
+"""
+
+from .feistel_schema import (
+    BUCKET_TIERS,
+    CANONICAL_SCHEMA_FIELDS,
+    DYNAMIC_SYMBOL_TABLE_SLOT,
+    FIELD_TO_SLOT,
+    SLOT_TO_FIELD,
+    ChaffEntropyEngine,
+    FeistelSchemaPermuter,
+    compute_shannon_entropy,
+)
+from .morph_engine import (
+    CONTENT_TYPE_HEADER,
+    HEADER_BUCKET_TIER,
+    HEADER_CONTENT_TYPE,
+    HEADER_EPOCH_ID,
+    HEADER_PROOF_NONCE,
+    ChameleonMorphEngine,
+    ChameleonWirePacket,
+    SessionRatchet,
+    WireFormat,
+    decode_canonical_json_rpc,
+    decode_cbor_rfc8949,
+    decode_flatbuffers_table,
+    decode_protobuf_varint,
+    encode_canonical_json_rpc,
+    encode_cbor_rfc8949,
+    encode_flatbuffers_table,
+    encode_protobuf_varint,
+    hkdf_sha256,
+)
+from .zk_handshake import (
+    GENERATOR_25519,
+    GENERATOR_M127,
+    MERSENNE_127,
+    PRIME_25519,
+    SchnorrProof,
+    ZKHandshakeEngine,
+)
+
+__all__ = [
+    "BUCKET_TIERS",
+    "CANONICAL_SCHEMA_FIELDS",
+    "CONTENT_TYPE_HEADER",
+    "ChaffEntropyEngine",
+    "ChameleonMorphEngine",
+    "ChameleonWirePacket",
+    "DYNAMIC_SYMBOL_TABLE_SLOT",
+    "FIELD_TO_SLOT",
+    "FeistelSchemaPermuter",
+    "GENERATOR_25519",
+    "GENERATOR_M127",
+    "HEADER_BUCKET_TIER",
+    "HEADER_CONTENT_TYPE",
+    "HEADER_EPOCH_ID",
+    "HEADER_PROOF_NONCE",
+    "MERSENNE_127",
+    "PRIME_25519",
+    "SLOT_TO_FIELD",
+    "SchnorrProof",
+    "SessionRatchet",
+    "WireFormat",
+    "ZKHandshakeEngine",
+    "compute_shannon_entropy",
+    "decode_canonical_json_rpc",
+    "decode_cbor_rfc8949",
+    "decode_flatbuffers_table",
+    "decode_protobuf_varint",
+    "encode_canonical_json_rpc",
+    "encode_cbor_rfc8949",
+    "encode_flatbuffers_table",
+    "encode_protobuf_varint",
+    "hkdf_sha256",
+]
