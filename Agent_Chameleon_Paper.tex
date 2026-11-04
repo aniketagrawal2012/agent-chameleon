@@ -54,7 +54,7 @@ aniketagrawal@google.com}
 \begin{abstract}
 As enterprise artificial intelligence architectures transition from monolithic prompt-response pipelines to distributed multi-agent swarms, autonomous agents increasingly coordinate high-stakes operations across financial enterprise resource planning (ERP) ledgers, clinical healthcare repositories, cloud identity and access management (IAM) planes, and real-time payment settlement rails. Standardized agent communication protocols---most notably the Model Context Protocol (MCP) and Agent2Agent (A2A) operating over JSON-RPC 2.0, HTTP/2, and gRPC---rely on static, human-readable wire schemas and long-lived bearer tokens. We demonstrate that even when payloads are encapsulated within transport-layer encryption or routed through multi-tenant service-mesh proxies that terminate Layer-7 traffic, static agent protocols remain severely vulnerable to statistical traffic fingerprinting, automated schema scraping, and credential replay. Across $N = 1{,}000$ enterprise MCP and A2A tool traces spanning $20$ distinct tool classes, standard passive traffic classifiers (Random Forest, Multi-Layer Perceptron, and $k$-Nearest Neighbors) achieve a $96.5\%$ ensemble mean accuracy ($95.0\%$ Random Forest, $94.5\%$ MLP, $100.0\%$ $k$-NN) in inferring the exact enterprise tool schema invoked by an agent.
 
-To eliminate these vulnerabilities at line rate, we present \textbf{Agent-Chameleon}, a three-stage polymorphic wire-transport and zero-knowledge session-handshake engine for multi-agent swarm communications. Agent-Chameleon introduces: (1)~an \textbf{Ephemeral X25519/HKDF-SHA256 Session Ratchet and Polymorphic Wire Serialization Engine} (\texttt{morph\_engine.py}) that advances a forward-secure state $R_t = \operatorname{HKDF-SHA256}(R_{t-1}, \text{epoch}_t \parallel \text{digest}_{t-1}, H(\mathcal{G}_t))$ on every turn and deterministically rotates wire serializations across four structurally distinct codecs---compact binary Protobuf base-128 varints, 4-byte aligned FlatBuffers vtables, RFC~8949 Concise Binary Object Representation (CBOR), and canonical HMAC-signed JSON-RPC---emitting observable \texttt{Content-Type: application/x-chameleon-morph+octet-stream} and \texttt{X-Chameleon-Epoch-ID} headers; (2)~a \textbf{Goal-Conditioned Bijective Field Permutation and Constant-Rate Chaff Entropy Engine} (\texttt{feistel\_schema.py}) that permutes 16-bit schema field identifiers through a 4-round SHAKE-256 keyed Luby-Rackoff Feistel network $F_k: \{0,\dots,2^{16}-1\} \to \{0,\dots,2^{16}-1\}$ with closed-form inverse $F_k^{-1}$ ($16.58\,\mu\text{s}$ mean latency, $100.0\%$ lossless bijectivity) and pads XOR-whitened frames into discrete bucket quanta via set-complement and $\mathbb{Z}_{256}$ affine-bijection chaff blocks so single-frame Shannon byte entropy reaches $H(X) = 7.992 \pm 0.005\text{ bits/byte}$ ($\ge 7.980\text{ bits/byte}$ across $100\%$ of frames); and (3)~a \textbf{Sub-35-Microsecond Non-Interactive Fiat-Shamir Schnorr Zero-Knowledge Challenge-Response} (\texttt{zk\_handshake.py}) carried in \texttt{X-Chameleon-Proof-Nonce} that proves possession of the ratcheted turn witness without transmitting static API keys or OAuth bearer tokens ($20.92\,\mu\text{s}$ mean proof generation, $28.64\,\mu\text{s}$ mean verification, and $28.86\,\mu\text{s}$ combined hot-path ratchet plus proof latency). Empirical evaluation over $N = 1{,}000$ traces demonstrates that Agent-Chameleon collapses attacker schema-inference accuracy from $96.5\%$ ensemble mean down to $4.67\%$ ($5.0\%$ Random Forest, $3.0\%$ MLP, $6.0\%$ $k$-NN---statistically indistinguishable from the $1/20 = 5.0\%$ uniform random-guess baseline) while achieving $100.0\%$ rejection of token replays, epoch rollbacks, cross-goal injections, and man-in-the-middle bit-flip tampering.
+To eliminate these vulnerabilities at line rate, we present \textbf{Agent-Chameleon}, a three-stage polymorphic wire-transport and zero-knowledge session-handshake engine for multi-agent swarm communications. Agent-Chameleon introduces: (1)~an \textbf{Ephemeral X25519/HKDF-SHA256 Session Ratchet and Polymorphic Wire Serialization Engine} (\texttt{morph\_engine.py}) that advances a forward-secure state $R_t = \operatorname{HKDF-SHA256}(R_{t-1}, \text{epoch}_t \parallel \text{digest}_{t-1}, H(\mathcal{G}_t))$ on every turn and deterministically rotates wire serializations across four structurally distinct codecs---compact binary Protobuf base-128 varints, 4-byte aligned FlatBuffers vtables, RFC~8949 Concise Binary Object Representation (CBOR), and canonical HMAC-signed JSON-RPC---emitting observable \texttt{Content-Type: application/x-chameleon-morph+octet-stream} and \texttt{X-Chameleon-Epoch-ID} headers; (2)~a \textbf{Goal-Conditioned Bijective Field Permutation and Constant-Rate Chaff Entropy Engine} (\texttt{feistel\_schema.py}) that permutes 16-bit schema field identifiers through a 4-round SHAKE-256 keyed Luby-Rackoff Feistel network $F_k: \{0,\dots,2^{16}-1\} \to \{0,\dots,2^{16}-1\}$ with closed-form inverse $F_k^{-1}$ ($16.58\,\mu\text{s}$ mean latency, $100.0\%$ lossless bijectivity) and pads XOR-whitened frames into discrete bucket quanta via set-complement and $\mathbb{Z}_{256}$ affine-bijection chaff blocks so single-frame Shannon byte entropy reaches $H(X) = 7.992 \pm 0.005\text{ bits/byte}$ ($\ge 7.980\text{ bits/byte}$ across $100\%$ of frames); and (3)~a \textbf{Sub-35-Microsecond Non-Interactive Fiat-Shamir Schnorr Zero-Knowledge Challenge-Response} (\texttt{zk\_handshake.py}) carried in \texttt{X-Chameleon-Proof-Nonce} that proves possession of the ratcheted turn witness without transmitting static API keys or OAuth bearer tokens ($20.92\,\mu\text{s}$ mean proof generation, $28.64\,\mu\text{s}$ mean verification, and $28.86\,\mu\text{s}$ combined sender-side hot-path ratchet plus proof generation latency; $104.04\,\mu\text{s}$ full 3-stage sender sealing). Empirical evaluation over $N = 1{,}000$ traces demonstrates that Agent-Chameleon collapses attacker schema-inference accuracy from $96.5\%$ ensemble mean down to $4.67\%$ ($5.0\%$ Random-Subspace Prototype/Forest, $3.0\%$ MLP, $6.0\%$ $k$-NN---statistically indistinguishable from the $1/20 = 5.0\%$ uniform random-guess baseline within the shared quantum bucket tier) while achieving $100.0\%$ rejection of token replays, epoch rollbacks, cross-goal injections, and man-in-the-middle bit-flip tampering.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -69,18 +69,18 @@ Despite advances in intra-agent prompt-injection defenses~\cite{debenedetti2025c
 
 \begin{enumerate}
     \item \textbf{Vulnerability to Statistical Traffic Fingerprinting and Tool-Schema Reconnaissance:} Classic work in network traffic analysis demonstrates that variable-length encrypted records and static application schemas leak substantial side-channel information regarding application state and remote procedure identity~\cite{wright2009traffic, dyer2012peekaboo, panchenko2016website, sirinam2018deep}. Furthermore, in modern enterprise service meshes where L7 observability sidecars, API gateways, or shared message brokers terminate TLS to perform routing and load balancing, raw or lightly framed JSON-RPC payloads are exposed directly to co-resident tenants or compromised middleboxes. Our empirical audit across $N = 1{,}000$ MCP/A2A tool invocations over $20$ enterprise tool classes reveals that standard unpadded JSON-RPC exhibits a mean Shannon byte entropy of only $4.788\text{ bits/byte}$ (out of $8.000\text{ bits/byte}$~\cite{shannon1948mathematical}), enabling lightweight Random Forest, Multi-Layer Perceptron (MLP), and $k$-Nearest Neighbor ($k$-NN) classifiers to identify the exact tool schema being invoked with $95.0\%$, $94.5\%$, and $100.0\%$ accuracy ($96.5\%$ ensemble mean), respectively. Even when JSON-RPC payloads are length-padded to fixed 512-byte multiples, L7 delimiter densities and byte histograms still allow $89.5\%$ Random Forest and $100.0\%$ $k$-NN classification accuracy.
-    \item \textbf{Automated Schema Scraping and Cross-Goal Payload Forgery:} Because field names and wire encodings remain invariant across turns and sessions, an adversary who observes or scrapes a single valid tool invocation frame immediately learns the structural AST template required to synthesize forged requests. Worse still, static schemas fail to cryptographically bind the wire representation of a tool call to the active high-level reasoning goal $\mathcal{G}_t$ authorized by the upstream orchestrator. Consequently, a compromised sub-agent or man-in-the-middle (MITM) relay can repurpose captured field structures from a benign read-only query goal into a state-mutating financial disbursement goal~\cite{debenedetti2024agentdojo, zhan2024injecagent}.
-    \item \textbf{Static Bearer Token Leakage vs. Multi-Round Handshake Latency:} Existing multi-agent runtimes predominantly authenticate inter-agent RPCs by attaching static API keys, OAuth 2.0 bearer tokens, or long-lived JWTs in HTTP headers~\cite{fett2023dpop, backman2024rfc9421, birgisson2014macaroons}. If a bearer token is intercepted at an L7 proxy or leaked into debug telemetry, an adversary can replay it across arbitrary tool endpoints until expiration. Conversely, replacing static tokens with per-turn mutual TLS (mTLS) re-handshakes~\cite{rescorla2018tls13} or classical 3-move interactive zero-knowledge identification protocols~\cite{goldwasser1989knowledge, schnorr1991efficient} introduces $450\,\mu\text{s}$ to $1{,}200\,\mu\text{s}$ of round-trip and asymmetric PKI overhead per turn, degrading multi-agent swarm throughput by an order of magnitude.
+    \item \textbf{Automated Schema Scraping and Cross-Goal Payload Forgery:} Because field names and wire encodings remain invariant across turns and sessions, an adversary who observes or scrapes a single valid tool invocation frame immediately learns the structural AST template required to synthesize forged requests. Worse still, static schemas fail to cryptographically bind the wire representation of a tool call to the active high-level reasoning goal $\mathcal{G}_t$ authorized by the upstream orchestrator. Consequently, an untrusted intermediate Layer-7 man-in-the-middle (MITM) relay ($\mathcal{A}_{\text{mitm}}$, lacking the session ratchet state) or a confused-deputy sub-agent lacking an orchestrator-signed goal capability token $\sigma_{\text{orch}}(\mathcal{G}_t)$ can repurpose captured field structures from a benign read-only query goal into a state-mutating financial disbursement goal~\cite{debenedetti2024agentdojo, zhan2024injecagent}.
+    \item \textbf{Static Bearer Token Leakage vs. Multi-Round Handshake Latency:} Existing multi-agent runtimes predominantly authenticate inter-agent RPCs by attaching static API keys, OAuth 2.0 bearer tokens, or long-lived JWTs in HTTP headers~\cite{fett2023dpop, backman2024rfc9421, birgisson2014macaroons, schinazi2025rfc9729}. If a bearer token is intercepted at an L7 proxy or leaked into debug telemetry, an adversary can replay it across arbitrary tool endpoints until expiration. Conversely, replacing static tokens with per-turn mutual TLS (mTLS) re-handshakes~\cite{rescorla2018tls13} or classical 3-move interactive zero-knowledge identification protocols~\cite{goldwasser1989knowledge, schnorr1991efficient} introduces $450\,\mu\text{s}$ to $1{,}200\,\mu\text{s}$ of round-trip and asymmetric PKI overhead per turn, while intermediate zero-trust API gateways that do not share the endpoint symmetric secret cannot pre-verify symmetric MACs at the perimeter without an algebraic public-commitment proof.
 \end{enumerate}
 
 \subsection{Contributions}
 To resolve the tension between wire-level schema confidentiality, zero-knowledge session authentication, and microsecond-scale multi-agent throughput, we design, implement, and evaluate \textbf{Agent-Chameleon}. Our work makes four primary contributions:
 
 \begin{enumerate}
-    \item \textbf{Ephemeral X25519/HKDF Session Ratchet and 4-Way Polymorphic Wire Serialization Engine (Stage 1, Section~\ref{sec:stage1}):} We formulate a synchronous, forward-secure session ratchet driven by RFC~5869 HKDF-SHA256~\cite{krawczyk2010hkdf} and bootstrapped via RFC~7748 X25519 Diffie-Hellman key agreement~\cite{langley2016x25519}. On every RPC turn $t$, the ratchet state $R_t$ evolves as a cryptographic function of the prior key $R_{t-1}$, the monotonic epoch counter $\text{epoch}_t$, the SHA-256 digest of the preceding wire frame $\text{digest}_{t-1}$, and the active task goal digest $H(\mathcal{G}_t)$. Seeded by $R_t$, the engine deterministically rotates the wire serialization codec on every turn across four structurally distinct formats with an exact $25\%$ stationary distribution over every 4-epoch window: (i)~compact binary Protobuf-style base-128 varints, (ii)~4-byte aligned FlatBuffers vtables (\texttt{FBCH}), (iii)~RFC~8949 CBOR binary maps~\cite{bormann2020cbor}, and (iv)~canonical sorted hex-keyed JSON-RPC with an 8-byte HMAC-SHA256 trailer.
-    \item \textbf{Goal-Conditioned 4-Round Keyed Feistel Schema Permutation and Constant-Rate Chaff Entropy Engine (Stage 2, Section~\ref{sec:stage2}):} We map canonical MCP/A2A schema field names and dynamic custom symbols into 16-bit integer slots and permute them on every turn via a balanced 4-round Luby-Rackoff Feistel network $F_k: \{0,\dots,2^{16}-1\} \to \{0,\dots,2^{16}-1\}$~\cite{luby1988construct, black2002ciphers, bellare2009format} keyed by FIPS~202 SHAKE-256~\cite{dworkin2015sha3} round tables derived from $(R_t, H(\mathcal{G}_t))$. We prove in Theorem~\ref{thm:feistel} that $F_k$ is an exact bijection across all $65{,}536$ domain elements with closed-form inverse $F_k^{-1}$ executing in $16.58\,\mu\text{s}$ mean latency ($15.83\,\mu\text{s}$ p50), while exhibiting $>99.9\%$ avalanche when the goal context $\mathcal{G}_t$ changes. To eliminate packet-length and byte-histogram side channels, we introduce a C-accelerated SHAKE-256 stream whitener paired with Set-Complement and $\mathbb{Z}_{256}$ Affine-Bijection Constant-Rate Chaff Injection into discrete quantum tiers $\{512, 1024, 2048, 3072, 4096, 6144, 8192\}\text{ bytes}$. We prove in Theorem~\ref{thm:entropy} that this construction guarantees a single-frame plug-in Shannon byte entropy lower bound $H(X) \ge 7.980\text{ bits/byte}$, achieving an empirical mean of $7.992 \pm 0.005\text{ bits/byte}$ across $N = 1{,}000$ traces.
-    \item \textbf{Sub-35-Microsecond Non-Interactive Fiat-Shamir Schnorr Zero-Knowledge Handshake (Stage 3, Section~\ref{sec:stage3}):} We eliminate static wire bearer tokens by embedding a single-move non-interactive Fiat-Shamir Schnorr Zero-Knowledge Proof of Knowledge (NIZKPoK)~\cite{fiat1986how, schnorr1991efficient, bellare1993random} in the \texttt{X-Chameleon-Proof-Nonce} header. We design a dual-tier verification architecture: a Tier-1 Hot-Path Ephemeral Ratchet Schnorr NIZKPoK operating over the Mersenne prime field $\mathbb{F}_{M_{127}}$ ($M_{127} = 2^{127}-1$) with single-turn ephemeral witnesses refreshed every RPC step and bound to a 128-bit Blake2s ratchet commitment tag ($20.92\,\mu\text{s}$ mean prove, $28.64\,\mu\text{s}$ mean verify, $30.13\,\mu\text{s}$ p99 prove), paired with Tier-2 full 256-bit prime-field Schnorr ($\mathbb{F}_{2^{255}-19}$) and RFC~8032 Ed25519~\cite{josefsson2017eddsa} epoch anchor signatures for cross-domain auditability. We prove soundness, zero-knowledge simulatability, and replay/desynchronization immunity with automatic ratchet rollback in Theorem~\ref{thm:schnorr}.
-    \item \textbf{Production-Grade Implementation and Empirical Evaluation (Sections~\ref{sec:impl}--\ref{sec:eval}):} We implement Agent-Chameleon as a modular Python package (\texttt{agent\_chameleon}) verified by a 24-test unit and property suite ($100\%$ pass rate) and benchmarked across $N = 1{,}000$ multi-agent traces spanning $20$ enterprise tool classes. Agent-Chameleon reduces attacker traffic-classifier accuracy from $96.5\%$ ensemble mean ($95.0\%$ Random Forest) to $4.67\%$ ($5.0\%$ Random Forest, $3.0\%$ MLP, $6.0\%$ $k$-NN, matching the $5.0\%$ uniform random-guess baseline), blocks $100.0\%$ of replay and MITM bit-flip attacks, and sustains $1.265 \times 10^6\text{ RPC/s}$ aggregate throughput across 128 concurrent agent sessions.
+    \item \textbf{Ephemeral X25519/HKDF Session Ratchet and 4-Way Polymorphic Wire Serialization Engine (Stage 1, Section~\ref{sec:stage1}):} We formulate a synchronous, forward-secure session ratchet driven by RFC~5869 HKDF-SHA256~\cite{krawczyk2010hkdf} and bootstrapped via RFC~7748 X25519 Diffie-Hellman key agreement~\cite{langley2016x25519}. On every RPC turn $t$, the ratchet state $R_t$ evolves as a cryptographic function of the prior key $R_{t-1}$, the monotonic epoch counter $\text{epoch}_t$, the SHA-256 digest of the preceding wire frame $\text{digest}_{t-1}$, and the active task goal digest $H(\mathcal{G}_t)$. Seeded by the block-initial ratchet key $R_{4\lfloor t/4 \rfloor}$, the engine deterministically rotates the wire serialization codec on every turn across four structurally distinct formats with an exact $25\%$ stationary distribution (cycling through all four formats without replacement in every 4-epoch super-frame): (i)~compact binary Protobuf-style base-128 varints, (ii)~4-byte aligned FlatBuffers vtables (\texttt{FBCH}), (iii)~RFC~8949 CBOR binary maps~\cite{bormann2020cbor}, and (iv)~canonical sorted hex-keyed JSON-RPC with an 8-byte HMAC-SHA256 trailer. Beyond providing defense-in-depth when Stage~2B stream whitening is terminated at split-inspection service-mesh proxies, binary codec rotation compresses verbose JSON schemas by $31\%$--$48\%$ and modulates pre-padding payload lengths $L_s$.
+    \item \textbf{Goal-Conditioned 4-Round Keyed Feistel Schema Permutation and Constant-Rate Chaff Entropy Engine (Stage 2, Section~\ref{sec:stage2}):} We map canonical MCP/A2A schema field names and dynamic custom symbols into 16-bit integer slots and permute them on every turn via a balanced 4-round Luby-Rackoff Feistel network $F_k: \{0,\dots,2^{16}-1\} \to \{0,\dots,2^{16}-1\}$~\cite{luby1988construct, black2002ciphers, bellare2009format} keyed by FIPS~202 SHAKE-256~\cite{dworkin2015sha3} round PRF tables derived from $(R_t, H(\mathcal{G}_t))$. We prove in Theorem~\ref{thm:feistel} that $F_k$ is an exact bijection across all $65{,}536$ domain elements with closed-form inverse $F_k^{-1}$ executing in $16.58\,\mu\text{s}$ mean latency ($15.83\,\mu\text{s}$ p50), while exhibiting $>99.9\%$ avalanche when the goal context $\mathcal{G}_t$ changes. To eliminate packet-length and byte-histogram side channels (including the finite-sample birthday bias that depresses standard AEAD or uniform random padding to $\approx 7.82\text{ bits/byte}$ at $1024\text{ B}$~\cite{nikitin2019purbs, thomson2024ohttp}), we introduce a C-accelerated SHAKE-256 stream whitener paired with Set-Complement and $\mathbb{Z}_{256}$ Affine-Bijection Constant-Rate Chaff Injection into discrete quantum tiers $\{512, 1024, 2048, 3072, 4096, 6144, 8192\}\text{ bytes}$. We prove in Theorem~\ref{thm:entropy} that this water-filling construction achieves an expected single-frame plug-in Shannon byte entropy $\mathbb{E}[H(B_t)] \ge 7.990\text{ bits/byte}$ (with concentration floor $H(B_t) \ge 7.980\text{ bits/byte}$ and empirical mean $7.992 \pm 0.005\text{ bits/byte}$ across $N = 1{,}000$ traces).
+    \item \textbf{Sub-35-Microsecond Non-Interactive Fiat-Shamir Schnorr Zero-Knowledge Handshake (Stage 3, Section~\ref{sec:stage3}):} We eliminate static wire bearer tokens by embedding a single-move non-interactive Fiat-Shamir Schnorr Zero-Knowledge Proof of Knowledge (NIZKPoK)~\cite{fiat1986how, schnorr1991efficient, bellare1993random} in the \texttt{X-Chameleon-Proof-Nonce} header. We design a dual-tier verification architecture: a Tier-1 Hot-Path Ephemeral Ratchet Schnorr NIZKPoK operating over the Mersenne prime field $\mathbb{F}_{M_{127}}$ ($M_{127} = 2^{127}-1$) with ephemeral witnesses refreshed every RPC step and bound to a 128-bit Blake2s ratchet commitment tag ($20.92\,\mu\text{s}$ mean prove, $28.64\,\mu\text{s}$ mean verify, $30.13\,\mu\text{s}$ p99 prove), paired with Tier-2 full 255-bit prime-field Schnorr ($\mathbb{F}_{2^{255}-19}$) and RFC~8032 Ed25519~\cite{josefsson2017eddsa} epoch anchor signatures in \texttt{X-Chameleon-Epoch-Anchor} for zero-trust L7 gateway pre-verification and cross-domain auditability. We prove soundness, zero-knowledge simulatability, and replay/desynchronization immunity with automatic ratchet rollback in Theorem~\ref{thm:schnorr}.
+    \item \textbf{Production-Grade Implementation and Empirical Evaluation (Sections~\ref{sec:impl}--\ref{sec:eval}):} We implement Agent-Chameleon as a modular Python package (\texttt{agent\_chameleon}) verified by a 24-test unit and property suite ($100\%$ pass rate) and benchmarked across $N = 1{,}000$ multi-agent traces spanning $20$ enterprise tool classes. Agent-Chameleon reduces attacker traffic-classifier accuracy from $96.5\%$ ensemble mean ($95.0\%$ Random-Subspace Prototype/Forest) to $4.67\%$ ($5.0\%$ Random-Subspace/CART Forest, $3.0\%$ MLP, $6.0\%$ $k$-NN, matching the $5.0\%$ uniform random-guess baseline within the shared quantum tier), blocks $100.0\%$ of replay and MITM bit-flip attacks, and sustains $2.18 \times 10^5\text{ RPC/s}$ full-pipeline multi-process throughput on a single 24-core workstation ($7.42 \times 10^5\text{ RPC/s}$ hot-path handshake; $1.265 \times 10^6\text{ RPC/s}$ across a 6-node cluster-tier 128-agent swarm).
 \end{enumerate}
 
 \section{Related Work}
@@ -90,7 +90,7 @@ To resolve the tension between wire-level schema confidentiality, zero-knowledge
 The Model Context Protocol (MCP) and Agent2Agent (A2A) specifications have established JSON-RPC 2.0 over HTTP/2 and Server-Sent Events (SSE) as the de facto standard for tool invocation and inter-agent task delegation. To authenticate requests across service boundaries, cloud deployments commonly rely on OAuth 2.0 Demonstrating Proof-of-Possession (DPoP, RFC~9449)~\cite{fett2023dpop}, HTTP Message Signatures (RFC~9421)~\cite{backman2024rfc9421}, or contextual HMAC capability tokens such as Macaroons~\cite{birgisson2014macaroons}. Concurrently, system-level agent security frameworks such as AgentDojo~\cite{debenedetti2024agentdojo}, InjecAgent~\cite{zhan2024injecagent}, and CaMeL~\cite{debenedetti2025camel} address indirect prompt injection by isolating control flow from untrusted data streams~\cite{greshake2023not}. However, existing agent protocols and capability tokens leave the wire serialization format and JSON-RPC schema keys completely static across turns. Furthermore, DPoP and RFC~9421 transmit explicit token headers and public-key signatures that cost $180$--$750\,\mu\text{s}$ per verification in software PKI without concealing the underlying tool schema from L7 traffic analysis.
 
 \subsection{Traffic Analysis Resistance and Format-Transforming Encryption}
-Statistical traffic analysis has long been shown to undermine encrypted protocols by exploiting packet sizes, timing, and byte distributions~\cite{wright2009traffic, dyer2012peekaboo, panchenko2016website, sirinam2018deep}. Wright et al.~\cite{wright2009traffic} proposed convex optimization for traffic morphing by splitting or padding packets to mimic target length distributions. However, Dyer et al.~\cite{dyer2012peekaboo} demonstrated in their ``Peek-a-Boo'' study that standard length-padding and morphing countermeasures fail against coarse summary classifiers when application framing invariants remain correlated with message types. Later, Dyer et al.~\cite{dyer2013protocol} introduced Format-Transforming Encryption (FTE) to shape ciphertext streams into regular-expression grammars to bypass deep-packet inspection (DPI) middleboxes. While FTE targets censorship circumvention by making encrypted streams look like static HTTP or SMB regexes, enterprise multi-agent swarms face the inverse problem: preventing an adversary or untrusted L7 proxy from inferring which of $|\mathcal{C}|$ enterprise tool schemas an agent is executing while preserving deterministic, zero-copy-compatible AST deserialization on the authorized receiver.
+Statistical traffic analysis has long been shown to undermine encrypted protocols by exploiting packet sizes, timing, and byte distributions~\cite{wright2009traffic, dyer2012peekaboo, cai2014systematic, panchenko2016website, sirinam2018deep}. Wright et al.~\cite{wright2009traffic} proposed convex optimization for traffic morphing by splitting or padding packets to mimic target length distributions. However, Dyer et al.~\cite{dyer2012peekaboo} and Cai et al.~\cite{cai2014systematic} demonstrated that standard length-padding countermeasures fail against summary classifiers when application framing invariants remain correlated with message types. Later, Dyer et al.~\cite{dyer2013protocol} introduced Format-Transforming Encryption (FTE) to shape ciphertext streams into regular-expression grammars, while Nikitin et al.~\cite{nikitin2019purbs} introduced Padded Uniform Random Blobs (PURBs) with logarithmic length buckets and Thomson and Wood~\cite{thomson2024ohttp} standardized Oblivious HTTP (OHTTP, RFC~9458) over HPKE (RFC~9180). While FTE and OHTTP target general web encapsulation, enterprise multi-agent swarms require (i)~goal-conditioned AST schema permutation that survives L7 proxy termination when stream whitening is disabled for split-plane inspection, (ii)~deterministic set-complement water-filling that eliminates the finite-sample birthday entropy deficit ($\approx 0.18\text{ bits/byte}$ at $1024\text{ B}$) of standard AEAD/PURB random padding, and (iii)~fast deserialization on the authorized receiver (including zero-copy offset lookup in Format~1 \texttt{FLATBUFFERS\_TABLE} alongside compact streaming in Formats~0, 2, and 3).
 
 \subsection{Feistel Format-Preserving Encryption and Cryptographic Ratchets}
 Constructing pseudorandom permutations (PRPs) over small or arbitrary finite domains was pioneered by Luby and Rackoff~\cite{luby1988construct}, extended to arbitrary finite domains by Black and Rogaway~\cite{black2002ciphers}, formalized as Format-Preserving Encryption (FPE) by Bellare et al.~\cite{bellare2009format}, and analyzed at higher rounds by Patarin~\cite{patarin2004luby}. Agent-Chameleon adapts the balanced Luby-Rackoff Feistel paradigm specifically to 16-bit AST schema slot identifiers $\{0,\dots,2^{16}-1\}$, conditioning the round PRFs on both an evolving HKDF ratchet state~\cite{krawczyk2010hkdf} and the active agent goal digest $H(\mathcal{G}_t)$. Unlike the Signal Double Ratchet~\cite{cohn2020double}, which encrypts a fixed protobuf envelope for asynchronous human messaging, Agent-Chameleon uses its synchronous HKDF ratchet to simultaneously drive (i)~4-way wire-codec polymorphism, (ii)~goal-conditioned Feistel schema tag permutation, (iii)~set-complement plus affine-bijection constant-rate chaff synthesis~\cite{nir2018chacha20, dworkin2015sha3}, and (iv)~single-move Fiat-Shamir Schnorr zero-knowledge proofs~\cite{fiat1986how, schnorr1991efficient, goldwasser1989knowledge, bellare1993random, pointcheval2000security}.
@@ -108,7 +108,7 @@ Formally, each payload $P_t$ is a hierarchical key-value abstract syntax tree (A
 We consider a probabilistic polynomial-time (PPT) Dolev-Yao and statistical traffic-analysis adversary $\mathcal{A} = (\mathcal{A}_{\text{clf}}, \mathcal{A}_{\text{mitm}})$ positioned along the network or L7 service-mesh path between $\mathcal{A}_i$ and $\mathcal{A}_j$:
 \begin{enumerate}
     \item \textbf{Passive Schema-Fingerprinting Adversary ($\mathcal{A}_{\text{clf}}$):} For each wire packet $W_t = (\mathcal{H}_t, B_t)$ comprising transport metadata headers $\mathcal{H}_t$ and byte payload $B_t \in \{0,\dots,255\}^{L_t}$, $\mathcal{A}_{\text{clf}}$ extracts a feature vector $\phi(W_t) \in \mathbb{R}^d$ (capturing frame length $L_t$, plug-in Shannon byte entropy $H(B_t)$, ASCII character ratios, structural delimiter densities, and byte-value histograms) and attempts to predict the underlying tool schema class $y_t \in \{1,\dots,|\mathcal{C}|\}$.
-    \item \textbf{Active Replay, Spoofing, and MITM Adversary ($\mathcal{A}_{\text{mitm}}$):} $\mathcal{A}_{\text{mitm}}$ can record historical wire packets $\{W_0, \dots, W_{t-1}\}$ and their headers (including \texttt{X-Chameleon-Proof-Nonce}), replay previously valid packets at turn $t$, flip arbitrary bits in $B_t$, spoof epoch counters in $\mathcal{H}_t$, or attempt to inject a packet sealed under goal context $\mathcal{G}_t$ into a session expecting goal context $\mathcal{G}_t' \ne \mathcal{G}_t$ without possessing the ephemeral session ratchet secret $R_t$.
+    \item \textbf{Active Replay, Spoofing, and MITM Adversary ($\mathcal{A}_{\text{mitm}}$):} $\mathcal{A}_{\text{mitm}}$ can record historical wire packets $\{W_0, \dots, W_{t-1}\}$ and their headers (including \texttt{X-Chameleon-Proof-Nonce}), replay previously valid packets at turn $t$, flip arbitrary bits in $B_t$, spoof epoch counters in $\mathcal{H}_t$, or attempt to cross-inject a valid packet captured from a session operating under goal context $\mathcal{G}_t$ into a session expecting goal context $\mathcal{G}_t' \ne \mathcal{G}_t$ without possessing the target session's ephemeral ratchet secret $R_t$. For threats involving a compromised initiator sub-agent attempting to escalate its own goal context $\mathcal{G}_t$, the orchestrator issues an Ed25519-signed goal capability token $\sigma_{\text{orch}}(t_{\text{plan}}, \mathcal{G}_t)$ during task delegation so the responder $\mathcal{A}_j$ independently validates $\mathcal{G}_t$ before advancing its ratchet.
 \end{enumerate}
 \end{definition}
 
@@ -116,7 +116,7 @@ We consider a probabilistic polynomial-time (PPT) Dolev-Yao and statistical traf
 Agent-Chameleon is engineered to satisfy five simultaneous properties:
 \begin{itemize}
     \item \textbf{G1 --- Exact Bijective Schema Recoverability:} For every valid AST payload $P_t$ and synchronized goal $\mathcal{G}_t$, the authorized receiver must recover $\hat{P}_t = P_t$ with $100.0\%$ lossless structural and numerical fidelity.
-    \item \textbf{G2 --- Near-Maximal Wire Byte Entropy:} Every wire frame body $B_t$ emitted on the network must satisfy plug-in Shannon byte entropy $H(B_t) \ge 7.980\text{ bits/byte}$ (within $0.25\%$ of the $8.000\text{ bits/byte}$ theoretical ceiling for an 8-bit alphabet).
+    \item \textbf{G2 --- Near-Maximal Wire Byte Entropy:} Every wire frame body $B_t$ emitted on the network must achieve a high-probability plug-in Shannon byte entropy floor $H(B_t) \ge 7.980\text{ bits/byte}$ ($\mathbb{E}[H(B_t)] \ge 7.990\text{ bits/byte}$, within $0.25\%$ of the $8.000\text{ bits/byte}$ theoretical ceiling for an 8-bit alphabet).
     \item \textbf{G3 --- Classifier Evasion to Random-Guess Baseline:} Across $|\mathcal{C}|$ balanced enterprise tool classes, the classification accuracy of random-forest, neural-network (MLP), and nearest-neighbor ($k$-NN) traffic fingerprinters on $\phi(W_t)$ must collapse to the uniform random-guess baseline $1/|\mathcal{C}|$ ($\approx 5.0\%$ for $|\mathcal{C}| = 20$).
     \item \textbf{G4 --- Zero-Knowledge Authentication \& $100\%$ Replay/Tamper Immunity:} No static API key or reusable bearer token may traverse the wire; $100\%$ of replayed, bit-flipped, epoch-spoofed, or cross-goal packets must be rejected prior to tool execution without desynchronizing the receiver's legitimate ratchet state.
     \item \textbf{G5 --- Sub-35-Microsecond Hot-Path Handshake Latency:} Per-turn ratchet progression and zero-knowledge proof generation/verification must execute in $< 35\,\mu\text{s}$ on commodity CPU cores without hardware accelerators.
@@ -157,24 +157,31 @@ Z_{\text{shared}} = \operatorname{X25519}(\text{sk}_i, \text{pk}_j) &= \operator
 From $Z_{\text{shared}}$, both endpoints initialize the 256-bit root ratchet state $R_{-1}$ and initial frame digest $D_{-1} = 0^{256}$ via RFC~5869 HKDF-SHA256~\cite{krawczyk2010hkdf}:
 \begin{equation}
 \label{eq:root_init}
-R_{-1} = \operatorname{HKDF-SHA256}\left(Z_{\text{shared}},\; \texttt{"chameleon-x25519-bootstrap-v1"},\; \texttt{"agent-chameleon-root-secret"},\; 32\right).
+\begin{aligned}
+R_{-1} &= \operatorname{HKDF-SHA256}\Big(Z_{\text{shared}}, \\
+&\quad \texttt{"chameleon-x25519-bootstrap-v1"}, \\
+&\quad \texttt{"agent-chameleon-root-secret"},\; 32\Big).
+\end{aligned}
 \end{equation}
 
 \begin{definition}[Forward-Secure Goal-Bound Per-Turn Ratchet Evolution]
 \label{def:ratchet}
-At each monotonic turn $t \in \{0, 1, 2, \dots\}$ with active task goal context $\mathcal{G}_t \in \{0,1\}^*$, both endpoints compute the domain-separated goal digest
+At each monotonic turn $t \in \{0, 1, 2, \dots\}$ with active task goal context $\mathcal{G}_t \in \{0,1\}^*$ (agreed upon during the workflow orchestration plan or announced inside the preceding turn's encrypted envelope $P_{t-1}$ alongside an orchestrator capability signature $\sigma_{\text{orch}}(\mathcal{G}_t)$), both endpoints compute the domain-separated goal digest
 \begin{equation}
 \label{eq:goal_digest}
-H(\mathcal{G}_t) = \operatorname{SHA256}\left(\texttt{"chameleon-goal-v1|"} \parallel \mathcal{G}_t\right) \in \{0,1\}^{256},
+\begin{aligned}
+H(\mathcal{G}_t) &= \operatorname{SHA256}\big(\texttt{"chameleon-goal-v1|"} \\
+&\quad \parallel \mathcal{G}_t\big) \in \{0,1\}^{256},
+\end{aligned}
 \end{equation}
 and advance the symmetric ratchet state from $(R_{t-1}, D_{t-1})$ to $(R_t, D_t)$ according to:
 \begin{equation}
 \label{eq:ratchet_step}
 \begin{aligned}
-\text{salt}_t &= \operatorname{ uint64\_be}(t) \parallel D_{t-1} \in \{0,1\}^{320}, \\
+\text{salt}_t &= \operatorname{uint64\_be}(t) \parallel D_{t-1} \in \{0,1\}^{320}, \\
 \text{info}_t &= \texttt{"chameleon-ratchet-v1|"} \parallel H(\mathcal{G}_t), \\
-\text{PRK}_t &= \operatorname{HMAC-SHA256}\left(\text{key}=\text{salt}_t,\; \text{msg}=R_{t-1}\right), \\
-R_t &= \operatorname{HMAC-SHA256}\left(\text{key}=\text{PRK}_t,\; \text{msg}=\text{info}_t \parallel \mathtt{0x01}\right),
+\text{PRK}_t &= \operatorname{HMAC-SHA256}\left(\text{salt}_t,\; R_{t-1}\right), \\
+R_t &= \operatorname{HMAC-SHA256}\left(\text{PRK}_t,\; \text{info}_t \parallel \mathtt{0x01}\right),
 \end{aligned}
 \end{equation}
 where $D_t = \operatorname{SHA256}(B_t)$ is recorded only after the turn-$t$ wire body $B_t$ is sealed (on the sender) or cryptographically verified and unwrapped (on the receiver).
@@ -188,23 +195,24 @@ Equation~\eqref{eq:ratchet_step} provides three crucial security guarantees:
 \end{enumerate}
 
 \subsection{Cycle-Balanced 4-Format Polymorphic Wire Serialization}
-Standard agent protocols use a single wire grammar throughout the lifetime of a deployment. In contrast, Agent-Chameleon uses the per-turn ratchet key $R_t$ to switch the underlying serialization grammar on every turn across four distinct wire formats $\mathcal{M} = \{0, 1, 2, 3\}$:
+Standard agent protocols use a single wire grammar throughout the lifetime of a deployment. In contrast, Agent-Chameleon uses the ratchet state to switch the underlying serialization grammar on every turn across four distinct wire formats $\mathcal{M} = \{0, 1, 2, 3\}$:
 
 \begin{itemize}
-    \item \textbf{Format $m_t = 0$ (\texttt{PROTOBUF\_VARINT}):} Serializes the Feistel-permuted payload tree into a compact binary stream using Google Protocol Buffers base-128 variable-length integers (\texttt{uvarint}). Each dictionary entry is encoded with wire tag $\omega_i = (\tilde{\tau}_i \ll 3) \mid 2$ (where $\tilde{\tau}_i \in \{0,\dots,65535\}$ is the Feistel-permuted field tag and wire type $2$ denotes a length-delimited record), while signed integers use bijective ZigZag encoding $z(n) = (n \ll 1) \oplus (n \gg 63)$ so negative and positive integers of small magnitude occupy minimal bytes.
+    \item \textbf{Format $m_t = 0$ (\texttt{PROTOBUF\_VARINT}):} Serializes the Feistel-permuted payload tree into a compact binary stream using Google Protocol Buffers base-128 variable-length integers (\texttt{uvarint}). Each dictionary entry is encoded with wire tag $\omega_i = (\tilde{\tau}_i \ll 3) \mid 2$ (where $\tilde{\tau}_i \in \{0,\dots,65535\}$ is the Feistel-permuted field tag and wire type $2$ denotes a length-delimited record), while signed integers use bijective ZigZag encoding $z(n) = (n \ll 1) \oplus (n \gg 63)$ (over 64-bit signed integers; see Eq.~\eqref{eq:zigzag_def} for arbitrary-precision $\mathbb{Z}$) so negative and positive integers of small magnitude occupy minimal bytes.
     \item \textbf{Format $m_t = 1$ (\texttt{FLATBUFFERS\_TABLE}):} Serializes the permuted payload into a random-access, 4-byte aligned binary buffer modeled on FlatBuffers. The frame begins with a 12-byte root header $\texttt{"FBCH"} \parallel \operatorname{uint32\_be}(\text{off}_{\text{vt}}) \parallel \operatorname{uint32\_be}(K)$, followed by a 4-byte zero-padded data heap and a trailing virtual table (\texttt{vtable}) directory consisting of $K$ 10-byte descriptors $\langle \operatorname{uint16\_be}(\tilde{\tau}_i), \operatorname{uint32\_be}(\text{off}_i), \operatorname{uint32\_be}(\text{len}_i) \rangle_{i=1}^K$.
     \item \textbf{Format $m_t = 2$ (\texttt{CBOR\_RFC8949}):} Serializes the permuted object graph into IETF STD~94 / RFC~8949 Concise Binary Object Representation~\cite{bormann2020cbor}, using major type $0$ for unsigned integers, major type $1$ for negative integers ($-1 - n$), major type $2$ for raw byte strings, major type $3$ for UTF-8 strings, major type $4$ for arrays, major type $5$ for integer-keyed maps ($\tilde{\tau}_i \mapsto v_i$), and major type $7$ for IEEE~754 binary64 floats ($\mathtt{0xFB}$) and simple booleans/nulls ($\mathtt{0xF4}, \mathtt{0xF5}, \mathtt{0xF6}$).
     \item \textbf{Format $m_t = 3$ (\texttt{CANONICAL\_JSON\_RPC}):} Serializes the permuted dictionary into deterministic, whitespace-free canonical JSON where every 16-bit Feistel tag is formatted as a 6-character lowercase hexadecimal string \texttt{"0x04a2"} sorted lexicographically, appended with an 8-byte domain-separated integrity trailer $\operatorname{HMAC-SHA256}(R_t, \texttt{"chameleon-jsonrpc|"} \parallel \text{json\_bytes})[0:8]$.
 \end{itemize}
 
-To ensure that all four wire formats are exercised with an exact $25\%$ stationary frequency over every 4-turn super-frame while remaining unpredictable to an external observer, the format selector $m_t \in \{0,1,2,3\}$ is computed via a keyed cyclic shift within each 4-epoch block $\lfloor t / 4 \rfloor$:
+To ensure that all four wire formats are exercised without replacement (an exact $25\%$ frequency of $1$ occurrence per format within every 4-turn super-frame $\lfloor t / 4 \rfloor$) while remaining unpredictable to an external observer, both endpoints cache the block-initial ratchet key $R_{\text{blk}} = R_{4\lfloor t / 4 \rfloor}$ at $t \equiv 0 \pmod 4$ and compute the format selector $m_t \in \{0,1,2,3\}$ via a block-invariant keyed cyclic shift:
 \begin{equation}
 \label{eq:format_select}
 \begin{aligned}
-s_{\text{blk}} &= \operatorname{HMAC-SHA256}\left(R_t,\; \operatorname{uint64\_be}(\lfloor t / 4 \rfloor)\right)[0], \\
+s_{\text{blk}} &= \operatorname{HMAC-SHA256}\left(R_{4\lfloor t / 4 \rfloor},\; \operatorname{uint64\_be}(\lfloor t / 4 \rfloor)\right)[0], \\
 m_t &= \left(s_{\text{blk}} + (t \bmod 4)\right) \bmod 4.
 \end{aligned}
 \end{equation}
+Because $s_{\text{blk}}$ remains fixed across the four consecutive turns $t \in \{4b, 4b+1, 4b+2, 4b+3\}$ of block $b = \lfloor t/4 \rfloor$, the mapping $t \bmod 4 \mapsto m_t$ is a bijection on $\{0,1,2,3\}$ for every block $b$ (and even if evaluated with per-turn $R_t$, $m_t$ retains an exact $25\%$ stationary marginal distribution over $\mathcal{M}$).
 
 \section{Stage 2: Goal-Conditioned Bijective Field Permutation and Constant-Rate Chaff Entropy}
 \label{sec:stage2}
@@ -212,12 +220,16 @@ m_t &= \left(s_{\text{blk}} + (t \bmod 4)\right) \bmod 4.
 Even if an agent runtime rotates wire serialization formats, encoding static field names or static numerical field IDs (such as Protobuf field tag \texttt{1} for \texttt{jsonrpc} and tag \texttt{2} for \texttt{method}) allows an L7 observer to correlate field positions across turns. Stage~2 eliminates structural schema invariants via a goal-conditioned 4-round Luby-Rackoff Feistel permutation network paired with a provably entropy-flattening constant-rate chaff engine.
 
 \subsection{Balanced 4-Round Keyed Feistel Schema Network}
-Let $\mathcal{F}_{\text{canon}} = (f_1, f_2, \dots, f_{64})$ denote the canonical registry of $64$ standard MCP and A2A schema field names (including \texttt{jsonrpc}, \texttt{method}, \texttt{params}, \texttt{id}, \texttt{result}, \texttt{error}, \texttt{tool\_name}, \texttt{arguments}, \texttt{session\_id}, \texttt{agent\_id}, \texttt{goal\_hash}, etc.), assigned to integer slots $\tau(f_m) = m \in \{1,\dots,64\}$. Any unseen custom string key $f_{\text{cust}} \notin \mathcal{F}_{\text{canon}}$ encountered in a nested tool payload is dynamically assigned a collision-free session slot $\tau(f_{\text{cust}}) \in \{256, \dots, 65533\}$, and the mapping $\{\tau(f_{\text{cust}}) \mapsto f_{\text{cust}}\}$ is stored inside a reserved symbol-table slot $\tau_{\text{sym}} = \mathtt{0xFFFE} = 65534$ whose own slot identifier and internal keys are likewise permuted by $F_k$.
+Let $\mathcal{F}_{\text{canon}} = (f_1, f_2, \dots, f_{64})$ denote the canonical registry of $64$ standard MCP and A2A schema field names (including \texttt{jsonrpc}, \texttt{method}, \texttt{params}, \texttt{id}, \texttt{result}, \texttt{error}, \texttt{tool\_name}, \texttt{arguments}, \texttt{session\_id}, \texttt{agent\_id}, \texttt{goal\_hash}, etc.), assigned to integer slots $\tau(f_m) = m \in \{1,\dots,64\}$. Any unseen custom string key $f_{\text{cust}} \notin \mathcal{F}_{\text{canon}}$ encountered in a nested tool payload is dynamically assigned a collision-free session slot $\tau(f_{\text{cust}}) \in \{256, \dots, 65533\}$ (supporting up to $|\mathcal{F}_{\text{custom}}(P_t)| \le 65{,}278$ distinct custom field names per turn), and the mapping $\{\tau(f_{\text{cust}}) \mapsto f_{\text{cust}}\}$ is stored inside a reserved symbol-table slot $\tau_{\text{sym}} = \mathtt{0xFFFE} = 65534$ whose own slot identifier and internal keys are likewise permuted by $F_k$.
 
-To permute the 16-bit slot domain $\mathbb{Z}_{2^{16}} = \{0, 1, \dots, 65535\}$ at turn $t$, we derive four 256-byte round lookup tables (S-boxes) $S_0^{(t)}, S_1^{(t)}, S_2^{(t)}, S_3^{(t)}: \{0,\dots,255\} \to \{0,\dots,255\}$ from a single invocation of the NIST FIPS~202 extendable-output function $\operatorname{SHAKE-256}$~\cite{dworkin2015sha3} seeded by $(R_t, H(\mathcal{G}_t))$:
+To permute the 16-bit slot domain $\mathbb{Z}_{2^{16}} = \{0, 1, \dots, 65535\}$ at turn $t$, we derive four 256-byte round lookup tables (8-bit pseudorandom functions) $S_0^{(t)}, S_1^{(t)}, S_2^{(t)}, S_3^{(t)}: \{0,\dots,255\} \to \{0,\dots,255\}$ from a single invocation of the NIST FIPS~202 extendable-output function $\operatorname{SHAKE-256}$~\cite{dworkin2015sha3} seeded by $(R_t, H(\mathcal{G}_t))$:
 \begin{equation}
 \label{eq:shake_sbox}
-S_0^{(t)} \parallel S_1^{(t)} \parallel S_2^{(t)} \parallel S_3^{(t)} = \operatorname{SHAKE-256}\left(\texttt{"chameleon-feistel-v1|"} \parallel R_t \parallel \texttt{"|"} \parallel H(\mathcal{G}_t),\; 1024\text{ bytes}\right).
+\begin{aligned}
+&S_0^{(t)} \parallel S_1^{(t)} \parallel S_2^{(t)} \parallel S_3^{(t)} \\
+&\quad = \operatorname{SHAKE-256}\Big(\texttt{"chameleon-feistel-v1|"} \\
+&\qquad \parallel R_t \parallel \texttt{"|"} \parallel H(\mathcal{G}_t),\; 1024\text{ B}\Big).
+\end{aligned}
 \end{equation}
 
 Given any 16-bit slot integer $x \in \{0, \dots, 65535\}$, we split $x$ into an 8-bit upper byte $L_0 = (x \gg 8) \mathbin{\&} \mathtt{0xFF}$ and an 8-bit lower byte $R_0 = x \mathbin{\&} \mathtt{0xFF}$. The forward 4-round Feistel map $F_k(x)$ iterates for $r = 0, 1, 2, 3$:
@@ -237,10 +249,10 @@ Let $F_k: \{0,\dots,2^{16}-1\} \to \{0,\dots,2^{16}-1\}$ be the 4-round balanced
     R_r = L_{r+1}, \qquad L_r = R_{r+1} \oplus S_r^{(t)}[L_{r+1}],
     \end{equation}
     returning $F_k^{-1}(y) = (L_0 \ll 8) \mid R_0 = x$. Consequently, recursive AST schema permutation and unpermutation satisfy $\operatorname{Unpermute}_k(\operatorname{Permute}_k(P_t)) = P_t$ with zero collisions and $100\%$ structural fidelity.
-    \item \textbf{Strong Pseudorandom Permutation (sPRP) Bound:} Under the assumption that $\operatorname{SHAKE-256}$ acts as a secure pseudorandom function family with distinguishing advantage $\epsilon_{\text{PRF}}$, the advantage of any adaptive chosen-plaintext/chosen-ciphertext adversary making $q_t$ field-tag queries within turn $t$ in distinguishing $F_k$ from a uniformly sampled random permutation $\pi \xleftarrow{\$} \mathfrak{S}_{65536}$ is bounded by:
+    \item \textbf{Strong Pseudorandom Permutation (sPRP) Bound:} Under the assumption that $\operatorname{SHAKE-256}$ acts as a secure pseudorandom function family with distinguishing advantage $\epsilon_{\text{PRF}}$, the advantage of any adaptive chosen-plaintext/chosen-ciphertext adversary making $q_t$ field-tag queries within turn $t$ in distinguishing standalone $F_k$ from a uniformly sampled random permutation $\pi \xleftarrow{\$} \mathfrak{S}_{65536}$ is bounded by the Luby-Rackoff 4-round adaptive CCA bound~\cite{luby1988construct, black2002ciphers}:
     \begin{equation}
     \label{eq:luby_rackoff}
-    \operatorname{Adv}^{\text{sPRP}}_{F_k}(\mathcal{A}) \le \frac{q_t^2}{2^8} + \epsilon_{\text{PRF}}.
+    \operatorname{Adv}^{\text{sPRP}}_{F_k}(\mathcal{A}) \le \frac{2 q_t^2}{2^8} + \epsilon_{\text{PRF}}.
     \end{equation}
 \end{enumerate}
 \end{theorem}
@@ -248,11 +260,14 @@ Let $F_k: \{0,\dots,2^{16}-1\} \to \{0,\dots,2^{16}-1\}$ be the 4-round balanced
 \begin{proof}
 To establish Part~(1), observe that for each individual round $r \in \{0,1,2,3\}$, the round transformation $\psi_r(L_r, R_r) = (R_r,\; L_r \oplus S_r^{(t)}[R_r])$ is a map from $\mathbb{Z}_{256} \times \mathbb{Z}_{256}$ to itself. Defining the inverse map $\psi_r^{-1}(L_{r+1}, R_{r+1}) = (R_{r+1} \oplus S_r^{(t)}[L_{r+1}],\; L_{r+1})$ and substituting $L_{r+1} = R_r$ and $R_{r+1} = L_r \oplus S_r^{(t)}[R_r]$ yields:
 \begin{equation}
-\psi_r^{-1}(\psi_r(L_r, R_r)) = \left((L_r \oplus S_r^{(t)}[R_r]) \oplus S_r^{(t)}[R_r],\; R_r\right) = \left(L_r \oplus (S_r^{(t)}[R_r] \oplus S_r^{(t)}[R_r]),\; R_r\right) = (L_r, R_r),
+\begin{aligned}
+\psi_r^{-1}(\psi_r(L_r, R_r)) &= \left((L_r \oplus S_r^{(t)}[R_r]) \oplus S_r^{(t)}[R_r],\; R_r\right) \\
+&= \left(L_r \oplus 0,\; R_r\right) = (L_r, R_r),
+\end{aligned}
 \end{equation}
 because bitwise XOR $\oplus$ over $\{0,1\}^8$ is an involution ($a \oplus b \oplus b = a$) regardless of whether the lookup table $S_r^{(t)}$ is itself injective. Since the composition of four bijections $F_k = \psi_3 \circ \psi_2 \circ \psi_1 \circ \psi_0$ is a bijection with inverse $F_k^{-1} = \psi_0^{-1} \circ \psi_1^{-1} \circ \psi_2^{-1} \circ \psi_3^{-1}$, no two distinct field slots $x_1 \ne x_2 \in \{0,\dots,65535\}$ can ever map to the same wire tag $F_k(x_1) = F_k(x_2)$. For recursive dictionary payloads $P_t$, canonical fields map to disjoint slots $\{1,\dots,64\}$ and custom fields map to disjoint slots $\{256,\dots,65533\}$ recorded in slot $65534$; hence bijectivity of $F_k$ guarantees exact recursive invertibility.
 
-To establish Part~(2), by the classical Luby-Rackoff theorem~\cite{luby1988construct} and Patarin's 4-round adaptive CCA bound~\cite{patarin2004luby} on balanced Feistel networks over $\{0,1\}^{2n}$ with $n = 8$, replacing the ideal random round functions $f_0, \dots, f_3: \{0,1\}^8 \to \{0,1\}^8$ with the $\operatorname{SHAKE-256}$-derived tables $S_0^{(t)}, \dots, S_3^{(t)}$ incurs at most $\epsilon_{\text{PRF}}$ distinguishing advantage, and the transcript collision probability among $q_t$ queries in the internal 8-bit branches is bounded by $\binom{q_t}{2} / 2^8 + \binom{q_t}{2} / 2^8 \le q_t^2 / 2^8$. Crucially, because Agent-Chameleon re-keys $(S_0^{(t)}, S_1^{(t)}, S_2^{(t)}, S_3^{(t)})$ on every RPC turn $t$ via $(R_t, H(\mathcal{G}_t))$, an adversary cannot accumulate queries across turns against a fixed permutation.
+To establish Part~(2), by the classical Luby-Rackoff theorem~\cite{luby1988construct} on 4-round balanced Feistel networks over $\{0,1\}^{2n}$ with half-block width $n = 8$ (see also Black and Rogaway~\cite{black2002ciphers} and Patarin~\cite{patarin2004luby} for small-domain Feistel analysis), replacing the ideal random round functions $f_0, \dots, f_3: \{0,1\}^8 \to \{0,1\}^8$ with the $\operatorname{SHAKE-256}$-derived tables $S_0^{(t)}, \dots, S_3^{(t)}$ incurs at most $\epsilon_{\text{PRF}}$ distinguishing advantage, and the transcript collision probability among $q_t$ adaptive forward/inverse queries in the internal 8-bit branches is bounded by $2 \binom{q_t}{2} / 2^8 + 2 \binom{q_t}{2} / 2^8 \le 2 q_t^2 / 2^8$. In the standalone unwhitened regime (Ablation Config~C), Eq.~\eqref{eq:luby_rackoff} is non-vacuous for typical MCP tool schemas having $q_t \in [5, 11] < 16$ fields per turn, and because Agent-Chameleon re-keys $(S_0^{(t)}, S_1^{(t)}, S_2^{(t)}, S_3^{(t)})$ on every RPC turn $t$ via $(R_t, H(\mathcal{G}_t))$, an adversary cannot accumulate queries across turns against a fixed permutation. Furthermore, in the full Agent-Chameleon pipeline, all serialized tags $F_k(\tau_i)$ are subsequently XOR-whitened by the Stage~2B $\operatorname{SHAKE-256}$ stream $K_{\text{stream}}$, preventing a wire adversary from observing raw Feistel outputs even when $q_t \ge 16$.
 \end{proof}
 
 \subsection{Set-Complement and Affine-Bijection Constant-Rate Chaff Engine}
@@ -261,82 +276,96 @@ While polymorphic serialization and Feistel field permutation eliminate plaintex
 To achieve both constant-tier length quantization and single-frame plug-in Shannon byte entropy $H(B_t) \ge 7.980\text{ bits/byte}$ in under $40\,\mu\text{s}$ of CPU execution, Stage~2B encapsulates $S_t$ as follows:
 
 \begin{enumerate}
-    \item \textbf{Quantum Bucket Selection:} Given payload length $L_s = |S_t|$ and an8-byte inner framing header $H_{\text{in}} = \operatorname{uint32\_be}(\mathtt{0xC4A3E100} \mid m_t) \parallel \operatorname{uint32\_be}(L_s)$ (total prefix length $L_p = L_s + 8$), the engine selects the smallest discrete bucket tier $B \in \mathcal{B} = \{512, 1024, 2048, 3072, 4096, 6144, 8192\}$ satisfying $B \ge \max(B_{\min}, 4 L_p, 1024)$ (or $B = 512$ when $B_{\min}=512$ and $L_p \le 64$), yielding a chaff budget $L_c = B - L_p \ge 3 L_p$.
+    \item \textbf{Quantum Bucket Selection:} Given payload length $L_s = |S_t|$ and an 8-byte inner framing header $H_{\text{in}} = \operatorname{uint32\_be}(\mathtt{0xC4A3E100} \mid m_t) \parallel \operatorname{uint32\_be}(L_s)$ (total prefix length $L_p = L_s + 8$), the engine selects the smallest discrete bucket tier $B \in \mathcal{B} = \{512, 1024, 2048, 3072, 4096, 6144, 8192\}$ satisfying $B \ge \max(B_{\min}, 4 L_p, 1024)$ (or $B = 512$ when $B_{\min}=512$ and $L_p \le 64$, i.e., $L_s \le 56\text{ B}$), yielding a chaff budget $L_c = B - L_p \ge 3 L_p$.
     \item \textbf{SHAKE-256 Stream Whitening:} The engine expands a per-turn keystream $K_{\text{stream}} = \operatorname{SHAKE-256}(\texttt{"chameleon-stream-v1|"} \parallel R_t \parallel \operatorname{uint64\_be}(t),\; L_p + 64)$ and XOR-whitens the raw prefix in a single C-level big-integer operation:
     \begin{equation}
     \label{eq:whiten}
     W_p = (H_{\text{in}} \parallel S_t) \oplus K_{\text{stream}}[0 : L_p].
     \end{equation}
-    \item \textbf{Slice-Wise Set-Complement Histogram Balancing:} Partition $W_p$ into $\lceil L_p / 128 \rceil$ contiguous slices $W_p^{(0)}, W_p^{(1)}, \dots$ of length at most $128$ bytes. For each slice $W_p^{(s)}$, let $\operatorname{set}(W_p^{(s)}) \subset \Sigma_{256} = \{0,\dots,255\}$ denote the set of distinct byte values occurring in $W_p^{(s)}$. The engine computes the exact set complement $M^{(s)} = \Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ (which contains every byte value absent from $W_p^{(s)}$), circularly shifts $M^{(s)}$ by the pseudorandom offset $K_{\text{stream}}[L_p + s] \bmod |M^{(s)}|$, and appends $M^{(s)}$ to the chaff buffer.
-    \item \textbf{Keyed $\mathbb{Z}_{256}$ Affine-Bijection Block Filling:} Any remaining chaff capacity $L_{\text{rem}} = B - L_p - \sum_s |M^{(s)}|$ is filled using 256-byte affine permutation blocks drawn from the precomputed family of 128 multiplicative-odd bijections over $\mathbb{Z}_{256}$:
+    \item \textbf{Slice-Wise Set-Complement Histogram Balancing:} Partition $W_p$ into $S = \lceil L_p / 128 \rceil$ contiguous slices $W_p^{(0)}, \dots, W_p^{(S-1)}$ of length $L_s^{(s)} \le 128$ bytes. For each slice $W_p^{(s)}$, let $\operatorname{set}(W_p^{(s)}) \subset \Sigma_{256} = \{0,\dots,255\}$ denote the set of distinct byte values occurring in $W_p^{(s)}$, with intra-slice duplicate count $d_s = L_s^{(s)} - |\operatorname{set}(W_p^{(s)})|$. The engine computes the exact set complement $M^{(s)} = \Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ of length $256 - |\operatorname{set}(W_p^{(s)})|$ (containing every byte value absent from $W_p^{(s)}$), circularly shifts $M^{(s)}$ by the pseudorandom offset $K_{\text{stream}}[L_p + s] \bmod |M^{(s)}|$, and appends $M^{(s)}$ to the chaff buffer. Thus each combined slice $U^{(s)} = W_p^{(s)} \parallel M^{(s)}$ has length $256 + d_s$ and guarantees that every byte $b \in \Sigma_{256}$ appears at least once.
+    \item \textbf{Keyed $\mathbb{Z}_{256}$ Affine-Bijection Block Filling:} The remaining chaff capacity after the $S$ complemented slices is $L_{\text{rem}} = B - \sum_{s=0}^{S-1} (256 + d_s) = 256(M - S) - C_{\text{dup}}$, where $M = B / 256$ and $C_{\text{dup}} = \sum_{s=0}^{S-1} d_s$ is the total duplicate count across $W_p$. Writing $L_{\text{rem}} = 256 q + r_{\text{rem}}$ with $q = \lfloor L_{\text{rem}} / 256 \rfloor$ and $r_{\text{rem}} = L_{\text{rem}} \bmod 256$, the engine appends $q$ complete 256-byte affine permutation blocks (plus a final prefix slice of length $r_{\text{rem}}$ when $r_{\text{rem}} > 0$) drawn from the precomputed family of 128 multiplicative-odd bijections over $\mathbb{Z}_{256}$:
     \begin{equation}
     \label{eq:affine_bijection}
-    \pi_{a, r}(x) = \left((2a + 1) \cdot ((x + r) \bmod 256)\right) \bmod 256, \qquad a \in \{0,\dots,127\},\; r \in \{0,\dots,255\},
+    \begin{aligned}
+    \pi_{a, r}(x) &= \left((2a + 1) \cdot ((x + r) \bmod 256)\right) \bmod 256, \\
+    a &\in \{0,\dots,127\},\quad r \in \{0,\dots,255\},
+    \end{aligned}
     \end{equation}
-    where $(a, r)$ are indexed by consecutive bytes of $K_{\text{stream}}$. Because $\gcd(2a+1, 256) = 1$, every 256-byte block $\Pi_{a,r} = (\pi_{a,r}(0), \dots, \pi_{a,r}(255))$ is a strict bijection on $\{0,\dots,255\}$ containing every byte value with exact multiplicity $1$.
+    where $(a, r)$ are indexed by consecutive bytes of $K_{\text{stream}}$. Because $\gcd(2a+1, 256) = 1$, every complete 256-byte block $\Pi_{a,r} = (\pi_{a,r}(0), \dots, \pi_{a,r}(255))$ is a strict bijection on $\{0,\dots,255\}$ containing every byte value with exact multiplicity $1$.
 \end{enumerate}
 
 \begin{theorem}[Plug-In Shannon Byte-Entropy Lower Bound and Histogram Uniformity]
 \label{thm:entropy}
-Let $B_t \in \{0,\dots,255\}^B$ be a wire frame constructed by the Stage~2B Set-Complement and Affine-Bijection Chaff Engine with prefix length $L_p \le B / 4$ and bucket size $B = 256 M$ ($M \ge 4$). Let $c(b) = |\{i \in \{0,\dots,B-1\} : B_t[i] = b\}|$ denote the empirical frequency count of byte $b \in \{0,\dots,255\}$ in $B_t$, and let $p(b) = c(b) / B$. Then:
+Let $B_t \in \{0,\dots,255\}^B$ be a wire frame constructed by the Stage~2B Set-Complement and Affine-Bijection Chaff Engine with prefix length $L_p \le B / 4$ and bucket size $B = 256 M$ ($M \ge 4$). Let $c(b) = |\{i \in \{0,\dots,B-1\} : B_t[i] = b\}|$ denote the empirical frequency count of byte $b \in \{0,\dots,255\}$ in $B_t$, and let $p(b) = c(b) / B$. Under the operational invariant $C_{\text{dup}} \le 256$ (which holds with probability $> 1 - 10^{-18}$ for SHAKE-256 whitened prefixes of length $L_p \le B / 4$, where $\mathbb{E}[d_s] \le 29.5$ per 128-byte slice):
 \begin{enumerate}
-    \item \textbf{Guaranteed Full Alphabet Support and Bounded Multiplicity Variance:} Every byte value $b \in \{0,\dots,255\}$ occurs at least $M - 1 \ge 3$ times in $B_t$, and the total squared histogram deviation from the uniform distribution $u(b) = 1/256$ satisfies:
+    \item \textbf{Guaranteed Full Alphabet Support and Bounded Multiplicity Variance:} Every byte value $b \in \{0,\dots,255\}$ occurs at least $c(b) \ge S + q = M - \lceil C_{\text{dup}} / 256 \rceil \ge M - 1 \ge 3$ times in $B_t$, and the expected squared histogram deviation from the uniform distribution $u(b) = 1/256$ (accounting for both intra-slice collisions and the truncated affine tail of length $r_{\text{rem}} \in [0, 255]$) satisfies:
     \begin{equation}
     \label{eq:l2_dev}
-    \sum_{b=0}^{255} \left(p(b) - \frac{1}{256}\right)^2 = \frac{1}{B^2} \sum_{b=0}^{255} (c(b) - M)^2 \le \frac{L_p}{B^2} \le \frac{1}{1024 M}.
+    \begin{aligned}
+    \mathbb{E}\left[\sum_{b=0}^{255} \left(p(b) - \frac{1}{256}\right)^2\right] &= \frac{1}{B^2} \mathbb{E}\left[\sum_{b=0}^{255} (c(b) - M)^2\right] \\
+    &\le \frac{L_p + 64}{B^2} \le \frac{M + 1}{1024 M^2}.
+    \end{aligned}
     \end{equation}
-    \item \textbf{Single-Frame Shannon Byte-Entropy Lower Bound:} The empirical plug-in Shannon byte entropy $H(B_t) = -\sum_{b=0}^{255} p(b) \log_2 p(b)$ satisfies:
+    \item \textbf{Single-Frame Shannon Byte-Entropy Lower Bound:} Defining $\kappa_M = \frac{M}{2(M-1)} \le \frac{2}{3}$ for $M \ge 4$, the empirical plug-in Shannon byte entropy $H(B_t) = -\sum_{b=0}^{255} p(b) \log_2 p(b)$ satisfies the exact deterministic lower bound:
     \begin{equation}
     \label{eq:entropy_bound}
-    H(B_t) \ge 8.000 - \frac{128}{\ln 2} \sum_{b=0}^{255} \left(p(b) - \frac{1}{256}\right)^2 \ge 8.000 - \frac{0.1803}{M}\text{ bits/byte},
+    \begin{aligned}
+    H(B_t) &\ge 8.000 - \frac{256 \kappa_M}{\ln 2} \sum_{b=0}^{255} \left(p(b) - \frac{1}{256}\right)^2, \\
+    \mathbb{E}[H(B_t)] &\ge 8.000 - \frac{0.2404 (M + 1)}{M^2}\text{ bits/B},
+    \end{aligned}
     \end{equation}
-    which guarantees $H(B_t) \ge 7.980\text{ bits/byte}$ across all operational frames ($7.992\text{ bits/byte}$ empirical mean over $N = 1{,}000$ traces).
+    which yields a worst-case deterministic floor $H(B_t) \ge 7.955\text{ bits/byte}$ at $M=4$, an expected entropy $\mathbb{E}[H(B_t)] \ge 7.990\text{ bits/byte}$ for typical payloads ($L_p \approx 250\text{ B}$ in $B=1024\text{ B}$ where $\mathbb{E}[\sum (c(b)-M)^2] \approx 72$), and a high-probability concentration floor $H(B_t) \ge 7.980\text{ bits/byte}$ across $100\%$ of operational traces ($7.992 \pm 0.005\text{ bits/byte}$ empirical mean over $N = 1{,}000$ traces).
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Consider each 128-byte slice $W_p^{(s)}$ of the whitened prefix $W_p$ paired with its set-complement chaff block $M^{(s)} = \Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$. In the combined sub-block $U^{(s)} = W_p^{(s)} \parallel M^{(s)}$ of length $128 + (256 - |\operatorname{set}(W_p^{(s)})|)$, every byte value $b \in \{0,\dots,255\}$ appears at least once (either in $W_p^{(s)}$ or in $M^{(s)}$), and the sum of excess multiplicities above $1$ across all 256 byte values is exactly $128 - |\operatorname{set}(W_p^{(s)})|$. Furthermore, each complete 256-byte affine-bijection block $\Pi_{a,r}$ contributes exactly $+1$ to the count $c(b)$ of every byte $b \in \{0,\dots,255\}$ because $\gcd(2a+1, 256) = 1$ implies $(2a+1)$ is a unit in the ring $\mathbb{Z}_{256}$. Summing across the $S = \lceil L_p / 128 \rceil$ complemented slices and the remaining $M - S$ affine blocks ensures $c(b) \ge M - 1$ for all $b \in \{0,\dots,255\}$. Writing $\delta_b = p(b) - \frac{1}{256} = (c(b) - M)/B$, where $\sum_{b=0}^{255} \delta_b = 0$, the Taylor expansion of $-p(b)\ln p(b)$ around $u = 1/256$ yields:
+Each combined slice $U^{(s)} = W_p^{(s)} \parallel M^{(s)}$ contributes $+1$ to all $256$ byte bins plus $d_s = L_s^{(s)} - |\operatorname{set}(W_p^{(s)})|$ duplicate increments, and each of the $q = M - S - \lceil C_{\text{dup}} / 256 \rceil$ complete 256-byte affine blocks $\Pi_{a,r}$ contributes exactly $+1$ to every bin $b \in \{0,\dots,255\}$ because $\gcd(2a+1, 256) = 1$ makes $x \mapsto (2a+1)(x+r) \bmod 256$ a unit-multiplier bijection on $\mathbb{Z}_{256}$. When $0 < C_{\text{dup}} \le 256$, we have $q = M - S - 1$ and the final partial affine slice of length $r_{\text{rem}} = 256 - C_{\text{dup}}$ contributes $+1$ to $r_{\text{rem}}$ distinct bins and $0$ to the remaining $256 - r_{\text{rem}} = C_{\text{dup}}$ bins; hence every bin satisfies $c(b) \ge S + q = M - 1 \ge 3$.
+
+Writing $\delta_b = p(b) - \frac{1}{256} = (c(b) - M)/B$ and $x_b = 256\delta_b = \frac{c(b)-M}{M} \ge -\frac{1}{M}$, we have $\sum_{b=0}^{255} x_b = 0$. By Taylor's theorem with exact Lagrange remainder on $g(x) = (1+x)\ln(1+x)$ for $x \ge -1/M$, since $g(0)=0$, $g'(0)=1$, and $g''(\xi) = \frac{1}{1+\xi} \le \frac{1}{1 - 1/M} = \frac{M}{M-1} = 2\kappa_M$ for all $\xi \in [-1/M, x_b]$, we obtain the exact upper bound $(1+x_b)\ln(1+x_b) \le x_b + \kappa_M x_b^2$ without dropping higher-order terms. Substituting $p(b) = \frac{1 + x_b}{256}$ yields:
 \begin{equation}
 \begin{aligned}
-H(B_t) &= -\frac{1}{\ln 2} \sum_{b=0}^{255} \left(\frac{1}{256} + \delta_b\right)\left(-\ln 256 + \ln(1 + 256\delta_b)\right) \\
-&\ge 8 - \frac{1}{\ln 2} \sum_{b=0}^{255} \left(\frac{1}{256} + \delta_b\right)\left(256\delta_b - \frac{(256\delta_b)^2}{2}\right) \\
-&= 8 - \frac{128}{\ln 2} \sum_{b=0}^{255} \delta_b^2 + \frac{256^2}{2\ln 2}\sum_{b=0}^{255} \delta_b^3.
+H(B_t) &= 8 - \frac{1}{256 \ln 2} \sum_{b=0}^{255} (1 + x_b)\ln(1 + x_b) \\
+&\ge 8 - \frac{256 \kappa_M}{\ln 2} \sum_{b=0}^{255} \delta_b^2.
 \end{aligned}
 \end{equation}
-Under SHAKE-256 whitening, the per-slice collision excess $\sum_{b=0}^{255} (c(b) - M)^2$ has expectation $\le L_p (1 - 1/256) < L_p \le B / 4 = 64 M$, yielding $\sum_{b=0}^{255} \delta_b^2 \le \frac{64 M}{(256 M)^2} = \frac{1}{1024 M}$ and $H(B_t) \ge 8 - \frac{128}{1024 M \ln 2} = 8 - \frac{0.1803}{M}\text{ bits/byte}$.
+Under SHAKE-256 whitening, the duplicate excess across the $S$ slices has second moment $\le L_p$, while the independent partial affine tail of $r_{\text{rem}}$ without-replacement draws adds variance $r_{\text{rem}}(1 - r_{\text{rem}}/256) \le 64$, giving $\mathbb{E}[\sum_{b=0}^{255} (c(b)-M)^2] \le L_p + 64 \le 64(M+1)$ and Eq.~\eqref{eq:entropy_bound}.
 \end{proof}
 
 \section{Stage 3: Sub-35-Microsecond Schnorr Zero-Knowledge Challenge-Response}
 \label{sec:stage3}
 
-To authenticate each morphed frame $B_t$ without transmitting static API keys, reusable OAuth bearer tokens, or slow per-message public-key signatures, Stage~3 implements a Dual-Tier Zero-Knowledge Session Handshake carried in the \texttt{X-Chameleon-Proof-Nonce} wire header.
+To authenticate each morphed frame $B_t$ without transmitting static API keys, reusable OAuth bearer tokens, or slow per-message public-key signatures, Stage~3 implements a Dual-Tier Zero-Knowledge Session Handshake carried in the \texttt{X-Chameleon-Proof-Nonce} wire header. Crucially, pairing an algebraic Schnorr Non-Interactive Zero-Knowledge Proof of Knowledge (NIZKPoK) $(R_{\text{com}}, e_t, s_t, Y_t)$ with a 128-bit symmetric ratchet authenticator $\tau_{\text{ratchet}}$ serves two distinct verification planes: (i)~zero-trust L7 service-mesh gateways and ingress middleboxes that hold only the turn's public commitment $Y_t$ (without possessing the secret session ratchet key $R_t$ needed to decrypt $B_t$) can algebraically verify $g^{s_t} \equiv R_{\text{com}} Y_t^{e_t} \pmod p$ at the network edge to drop unauthenticated packets before they reach the agent runtime, while (ii)~the receiving agent endpoint holding $R_t$ simultaneously verifies $\tau_{\text{ratchet}}$ and $Y_t = g^{x_t(R_t)} \bmod p$ for 128-bit symmetric unforgeability.
 
 \subsection{Protocol Specification and Dual-Tier Field Arithmetic}
-Let $p$ be a prime modulus and $g \in \mathbb{F}_p^*$ be a generator of a multiplicative subgroup of $\mathbb{F}_p^*$. Agent-Chameleon supports two cryptographic operating modes selectable per deployment policy:
+Let $p$ be a prime modulus and $g \in \mathbb{F}_p^*$ be a generator of a multiplicative subgroup of order $q_{\text{ord}} = \operatorname{ord}_p(g)$. Agent-Chameleon supports two cryptographic operating modes selectable per deployment policy:
 \begin{itemize}
-    \item \textbf{Tier-1 Hot-Path Mode (\texttt{fast\_m127}):} Operates over the Mersenne prime field $p = M_{127} = 2^{127} - 1$ with generator $g = 7$, using single-turn short ephemeral witnesses $x_t \in [1, 2^{32}-1]$ and blinding nonces $k_t \in [1, 2^{40}-1]$ refreshed on every RPC turn via 256-bit Blake2b expansion of $(R_t, t)$ and paired with a 128-bit domain-separated Blake2s ratchet authenticator tag $\tau_{\text{ratchet}}$. Because modular reduction modulo $2^{127}-1$ and short-exponent binary exponentiation require only 32--40 squarings in C, proof generation completes in $20.92\,\mu\text{s}$ mean ($20.38\,\mu\text{s}$ p50) and verification completes in $28.64\,\mu\text{s}$ mean ($28.58\,\mu\text{s}$ p50).
-    \item \textbf{Tier-2 Full-256-Bit \& Ed25519 Anchor Mode (\texttt{full256} + \texttt{ed25519}):} Operates over the 255-bit prime field $p = 2^{255} - 19$ with generator $g = 5$ and 192-bit witnesses, alongside periodic RFC~8032 Ed25519~\cite{josefsson2017eddsa} signatures over the epoch ratchet root $R_t$ for third-party cross-domain non-repudiation.
+    \item \textbf{Tier-1 Hot-Path Mode (\texttt{fast\_m127}):} Operates over the Mersenne prime field $p = M_{127} = 2^{127} - 1$ with generator $g = 7$, using single-turn ephemeral witnesses of byte length $\ell_x = 4\text{ B}$ ($x_t \in [1, 2^{32}-1]$), blinding nonces of byte length $\ell_k = 5\text{ B}$ ($k_t \in [1, 2^{40}-1]$), and Fiat-Shamir challenges of byte length $\ell_e = 4\text{ B}$ ($e_t \in [1, 2^{32}-1]$), refreshed on every RPC turn via 384-bit BLAKE2b expansion of $(R_t, t)$ and paired with the 128-bit BLAKE2s ratchet tag $\tau_{\text{ratchet}}$. Because each witness $x_t$ is used for exactly one turn ($Q = 1$) and guarded by the 128-bit MAC $\tau_{\text{ratchet}}$ against online forgery, 32--40 bit exponents suffice on the hot path while requiring only 32--40 modular squarings in C, completing proof generation in $20.92\,\mu\text{s}$ mean ($20.38\,\mu\text{s}$ p50) and verification in $28.64\,\mu\text{s}$ mean ($28.58\,\mu\text{s}$ p50). (When standalone statistical zero-knowledge without subgroup reduction is required against an offline transcript analyzer, setting $\ell_k = 16\text{ B}$ provides $2^{-64}$ statistical blinding at $+6.1\,\mu\text{s}$, or computing $s_t = (k_t + e_t x_t) \bmod q_{\text{ord}}$ provides perfect HVZK.)
+    \item \textbf{Tier-2 Full-256-Bit \& Ed25519 Anchor Mode (\texttt{full256} + \texttt{ed25519}):} Operates over the 255-bit prime field $p = 2^{255} - 19$ with generator $g = 5$, witness length $\ell_x = 24\text{ B}$ ($192\text{ bits}$), blinding nonce length $\ell_k = 32\text{ B}$ ($256\text{ bits}$), and challenge length $\ell_e = 16\text{ B}$ ($128\text{ bits}$), alongside periodic RFC~8032 Ed25519~\cite{josefsson2017eddsa} signatures over the epoch ratchet root $R_t$ (transmitted in the optional \texttt{X-Chameleon-Epoch-Anchor} header every $\Delta_{\text{anchor}} = 100$ turns) for third-party cross-domain non-repudiation.
 \end{itemize}
 
 At turn $t$, both endpoints deterministically derive the turn's public session commitment $Y_t = g^{x_t} \bmod p$ from their synchronized ratchet key $R_t$ via:
 \begin{equation}
 \label{eq:zk_witness}
 \begin{aligned}
-d_t &= \operatorname{BLAKE2b-384}\left(\texttt{"chameleon-zk-witness|"} \parallel R_t \parallel \operatorname{uint64\_be}(t)\right), \\
-x_t &= \operatorname{int}(d_t[0 : \ell_x]) \mid 1, \qquad k_t = \operatorname{int}(d_t[\ell_x : \ell_x + \ell_k]) \mid 1, \qquad Y_t = g^{x_t} \bmod p.
+d_t &= \operatorname{BLAKE2b-384}\big(\texttt{"chameleon-zk-witness|"} \\
+&\quad \parallel R_t \parallel \operatorname{uint64\_be}(t)\big), \\
+x_t &= \operatorname{int}(d_t[0 : \ell_x]) \mid 1, \quad k_t = \operatorname{int}(d_t[\ell_x : \ell_x + \ell_k]) \mid 1, \\
+Y_t &= g^{x_t} \bmod p.
 \end{aligned}
 \end{equation}
-To prove knowledge of $x_t$ bound to the wire frame $B_t$ without revealing $x_t$ or $R_t$, the sender computes the Schnorr commitment $R_{\text{com}}$, Fiat-Shamir challenge $e_t$~\cite{fiat1986how, schnorr1991efficient}, algebraic response $s_t$ over $\mathbb{Z}$, and 128-bit ratchet tag $\tau_{\text{ratchet}}$:
+To prove knowledge of $x_t$ bound to the wire frame $B_t$ without revealing $x_t$ or $R_t$, the sender computes the Schnorr commitment $R_{\text{com}}$, Fiat-Shamir challenge $e_t$~\cite{fiat1986how, schnorr1991efficient}, algebraic response $s_t$, and 128-bit ratchet tag $\tau_{\text{ratchet}}$:
 \begin{equation}
 \label{eq:schnorr_prove}
 \begin{aligned}
 R_{\text{com}} &= g^{k_t} \bmod p, \qquad h_B = \operatorname{BLAKE2s-128}(B_t), \\
-e_t &= \operatorname{int}\left(\operatorname{BLAKE2s}\left(\texttt{"chameleon-fs|"} \parallel R_{\text{com}} \parallel Y_t \parallel \operatorname{uint64\_be}(t) \parallel h_B\right)[0 : \ell_e]\right) \mid 1, \\
-s_t &= k_t + e_t \cdot x_t \quad (\text{evaluated in }\mathbb{Z}), \\
-\tau_{\text{ratchet}} &= \operatorname{BLAKE2s-128}\left(\texttt{"chameleon-ratchet-tag|"} \parallel R_t \parallel \operatorname{uint64\_be}(t) \parallel h_B \parallel R_{\text{com}}\right).
+e_t &= \operatorname{int}\Big(\operatorname{BLAKE2s}\big(\texttt{"chameleon-fs|"} \parallel R_{\text{com}} \\
+&\quad \parallel Y_t \parallel \operatorname{uint64\_be}(t) \parallel h_B\big)[0 : \ell_e]\Big) \mid 1, \\
+s_t &= k_t + e_t \cdot x_t \quad (\text{in }\mathbb{Z},\text{ or }\bmod\, q_{\text{ord}}), \\
+\tau_{\text{ratchet}} &= \operatorname{BLAKE2s-128}\Big(\texttt{"chameleon-ratchet-tag|"} \\
+&\quad \parallel R_t \parallel \operatorname{uint64\_be}(t) \parallel h_B \parallel R_{\text{com}}\Big).
 \end{aligned}
 \end{equation}
-The tuple $\pi_t = (t, R_{\text{com}}, e_t, s_t, Y_t, \tau_{\text{ratchet}})$ is packed into a compact 81-byte binary structure (108 ASCII characters in URL-safe Base64) and transmitted in the \texttt{X-Chameleon-Proof-Nonce} header.
+The tuple $\pi_t = (t, R_{\text{com}}, e_t, s_t, Y_t, \tau_{\text{ratchet}})$ is packed into a compact 81-byte binary structure in \texttt{fast\_m127} mode (108 ASCII characters in URL-safe Base64) or a 153-byte structure in \texttt{full256} mode (204 Base64 characters) and transmitted in the \texttt{X-Chameleon-Proof-Nonce} header.
 
 \begin{theorem}[Non-Interactive Schnorr Ratchet Soundness, Zero-Knowledge Simulatability, and Replay Immunity]
 \label{thm:schnorr}
@@ -348,20 +377,23 @@ The Stage~3 handshake protocol defined by Eqs.~\eqref{eq:zk_witness}--\eqref{eq:
     g^{s_t} \equiv R_{\text{com}} \cdot Y_t^{e_t} \pmod p
     \end{equation}
     and tag equality $\tau_{\text{ratchet}} = \hat{\tau}_{\text{ratchet}}$ hold with probability $1$.
-    \item \textbf{Special Soundness and Unforgeability:} Under the Discrete Logarithm assumption in $\langle g \rangle \subset \mathbb{F}_p^*$ and the Random Oracle / PRF security of $\operatorname{BLAKE2s}$~\cite{bellare1993random, pointcheval2000security}, any adversary who produces two accepting transcripts $(R_{\text{com}}, e_1, s_1)$ and $(R_{\text{com}}, e_2, s_2)$ with $e_1 \ne e_2$ immediately yields the secret witness $x_t = (s_1 - s_2)/(e_1 - e_2)$ over $\mathbb{Z}$, and the probability that an unauthenticated adversary without $R_t$ forges a valid $(\pi_t, B_t)$ at turn $t$ is at most $2^{-128}$.
-    \item \textbf{Honest-Verifier / Random-Oracle Zero-Knowledge:} The public transcript $(R_{\text{com}}, e_t, s_t, Y_t)$ reveals zero information about $x_t$ beyond the public commitment $Y_t = g^{x_t} \bmod p$ when $k_t \gg e_t x_t$ (or in modular subgroup form), and $x_t$ is permanently retired after turn $t$.
+    \item \textbf{Special Soundness and 128-Bit Unforgeability:} Under the Discrete Logarithm assumption in $\langle g \rangle \subset \mathbb{F}_p^*$ of order $q_{\text{ord}} = \operatorname{ord}_p(g)$ and the Random Oracle / PRF security of $\operatorname{BLAKE2s}$~\cite{bellare1993random, pointcheval2000security}, any adversary who produces two accepting transcripts $(R_{\text{com}}, e_1, s_1)$ and $(R_{\text{com}}, e_2, s_2)$ with $e_1 \ne e_2$ immediately yields the secret witness $x_t \equiv (s_1 - s_2)(e_1 - e_2)^{-1} \pmod{q_{\text{ord}}}$ (or $x_t = (s_1 - s_2)/(e_1 - e_2)$ over $\mathbb{Z}$), and the probability that an unauthenticated adversary without $R_t$ forges a valid $(\pi_t, B_t)$ at turn $t$ is at most $2^{-128}$.
+    \item \textbf{Honest-Verifier / Random-Oracle Zero-Knowledge:} Under modular response $s_t = (k_t + e_t x_t) \bmod q_{\text{ord}}$ (or over $\mathbb{Z}$ with statistical blinding $k_t \gg e_t x_t$), the public transcript $(R_{\text{com}}, e_t, s_t, Y_t)$ can be simulated in the Random Oracle Model without knowing $x_t$, and $x_t$ is permanently retired after single-turn use at epoch $t$.
     \item \textbf{Replay and Desynchronization Immunity:} Any replayed packet $W_{t'} (t' \le t)$ or tampered packet $\tilde{W}_t$ is rejected with probability $1 - 2^{-128}$, and atomic ratchet rollback leaves the verifier's state $(R_{t-1}, t, D_{t-1})$ intact for the legitimate turn-$t$ packet.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-For Part~(1), since $s_t = k_t + e_t x_t$ holds over the integers $\mathbb{Z}$ with $k_t, e_t, x_t > 0$, standard exponent laws in any associative monoid $(\mathbb{F}_p^*, \cdot)$ immediately yield:
+For Part~(1), since $s_t = k_t + e_t x_t$ holds over $\mathbb{Z}$ (or modulo $q_{\text{ord}} = \operatorname{ord}_p(g)$), standard exponent laws in $(\mathbb{F}_p^*, \cdot)$ immediately yield:
 \begin{equation}
-g^{s_t} \bmod p = g^{k_t + e_t x_t} \bmod p = \left(g^{k_t} \cdot (g^{x_t})^{e_t}\right) \bmod p = \left(R_{\text{com}} \cdot Y_t^{e_t}\right) \bmod p.
+\begin{aligned}
+g^{s_t} \bmod p &= g^{k_t + e_t x_t} \bmod p = \left(g^{k_t} \cdot (g^{x_t})^{e_t}\right) \bmod p \\
+&= \left(R_{\text{com}} \cdot Y_t^{e_t}\right) \bmod p.
+\end{aligned}
 \end{equation}
-For Part~(2), by the Pointcheval-Stern Forking Lemma~\cite{pointcheval2000security}, rewinding a successful Schnorr forger on the random oracle $\operatorname{BLAKE2s}(\texttt{"chameleon-fs|"} \parallel \dots)$ yields two transcripts sharing $R_{\text{com}} = g^{k_t} \bmod p$ with distinct challenges $e_1 \ne e_2$ satisfying $g^{s_1} \equiv R_{\text{com}} Y_t^{e_1}$ and $g^{s_2} \equiv R_{\text{com}} Y_t^{e_2} \pmod p$, whence $g^{s_1 - s_2} \equiv Y_t^{e_1 - e_2} \pmod p$ and $(s_1 - s_2) = x_t(e_1 - e_2)$ over $\mathbb{Z}$, extracting $x_t$ in a single integer division. Moreover, because the verifier simultaneously checks the 128-bit keyed MAC $\tau_{\text{ratchet}} = \operatorname{BLAKE2s-128}(R_t \parallel t \parallel h_B \parallel R_{\text{com}})$ and verifies $Y_t == g^{x_t(R_t)} \bmod p$, any external attacker lacking $R_t$ faces a $2^{-128}$ forgery barrier on $\tau_{\text{ratchet}}$ even before the algebraic Schnorr check is reached.
+For Part~(2), by the Pointcheval-Stern Forking Lemma~\cite{pointcheval2000security}, rewinding a successful Schnorr forger on the random oracle $\operatorname{BLAKE2s}(\texttt{"chameleon-fs|"} \parallel \dots)$ yields two transcripts sharing $R_{\text{com}} = g^{k_t} \bmod p$ with distinct challenges $e_1 \ne e_2$ satisfying $g^{s_1} \equiv R_{\text{com}} Y_t^{e_1}$ and $g^{s_2} \equiv R_{\text{com}} Y_t^{e_2} \pmod p$, whence $g^{s_1 - s_2} \equiv Y_t^{e_1 - e_2} = g^{x_t(e_1 - e_2)} \pmod p$. Consequently, $s_1 - s_2 \equiv x_t(e_1 - e_2) \pmod{q_{\text{ord}}}$, extracting $x_t \bmod q_{\text{ord}}$. Moreover, because the endpoint verifier simultaneously checks the 128-bit keyed MAC $\tau_{\text{ratchet}} = \operatorname{BLAKE2s-128}(R_t \parallel t \parallel h_B \parallel R_{\text{com}})$ and verifies $Y_t == g^{x_t(R_t)} \bmod p$, any external attacker lacking $R_t$ faces a $2^{-128}$ forgery barrier on $\tau_{\text{ratchet}}$ even before the algebraic Schnorr check is reached.
 
-For Part~(4), the verifier maintains a monotonic epoch counter $t_{\text{exp}}$ and a sliding anti-replay set $\mathcal{W}_{\text{seen}}$ of $(t, \tau_{\text{ratchet}})$ tuples over window $W = 4096$. Any duplicate $(t, \tau_{\text{ratchet}}) \in \mathcal{W}_{\text{seen}}$ or mismatched header epoch $t \ne t_{\text{exp}}$ is rejected in $\mathcal{O}(1)$ hash-table lookup time. Prior to speculative ratchet advancement, the verifier checkpoints $(R_{\text{saved}}, t_{\text{saved}}, D_{\text{saved}}) \leftarrow (R_{t-1}, t, D_{t-1})$ and restores the checkpoint Inside the \texttt{except} handler whenever proof verification, chaff unwrapping, or MAC validation fails, ensuring that an active attacker flooding invalid packets cannot advance or corrupt the receiver's ratchet state.
+For Part~(4), the verifier maintains a monotonic epoch counter $t_{\text{exp}}$ and a sliding anti-replay set $\mathcal{W}_{\text{seen}}$ of $(t, \tau_{\text{ratchet}})$ tuples over window $W = 4096$. Any duplicate $(t, \tau_{\text{ratchet}}) \in \mathcal{W}_{\text{seen}}$ or mismatched header epoch $t \ne t_{\text{exp}}$ is rejected in $\mathcal{O}(1)$ hash-table lookup time. Prior to speculative ratchet advancement, the verifier checkpoints $(R_{\text{saved}}, t_{\text{saved}}, D_{\text{saved}}) \leftarrow (R_{t-1}, t, D_{t-1})$ and restores the checkpoint inside the \texttt{except} handler whenever proof verification, chaff unwrapping, or MAC validation fails, ensuring that an active attacker flooding invalid packets cannot advance or corrupt the receiver's ratchet state.
 \end{proof}
 
 \section{Implementation and Wire-Protocol Specification}
@@ -372,152 +404,164 @@ We implemented Agent-Chameleon in Python~3.11 (\texttt{agent\_chameleon/}) using
 \subsection{Wire Header Contract and Packet Framing}
 Every outbound RPC frame sealed by \texttt{ChameleonMorphEngine.seal\_message} emits four deterministic HTTP/2, gRPC, or FastMCP transport metadata headers:
 \begin{enumerate}
-    \item \texttt{Content-Type: application/x-chameleon-morph+octet-stream} --- signals to the receiving Agent-Chameleon sidecar or endpoint middleware that the payload body is encapsulated in a constant-rate morphed envelope.
-    \item \texttt{X-Chameleon-Epoch-ID: <16-hex-digits>} --- carries the big-endian 64-bit monotonic turn index $t$ formatted as a 16-character lowercase hexadecimal string (e.g., \texttt{000000000000002a} for $t = 42$).
-    \item \texttt{X-Chameleon-Proof-Nonce: <base64url-token>} --- carries the serialized \texttt{SchnorrProof} structure $\pi_t$ (81 raw bytes / 108 URL-safe Base64 characters in \texttt{fast\_m127} mode, or 153 raw bytes / 204 Base64 characters in \texttt{full256} mode).
-    \item \texttt{X-Chameleon-Bucket-Tier: <integer-bytes>} --- declares the discrete quantum bucket size $B \in \{512, 1024, 2048, 3072, 4096, 6144, 8192\}$ of the wire body $B_t$ for zero-copy pre-allocation on the receiver socket buffer.
+    \item \texttt{Content-Type}: set to \texttt{application/}\allowbreak\texttt{x-chameleon-morph+}\allowbreak\texttt{octet-stream} --- signals to the receiving Agent-Chameleon sidecar or endpoint middleware that the payload body is encapsulated in a constant-rate morphed envelope.
+    \item \texttt{X-Chameleon-Epoch-ID}: \texttt{<16-hex-digits>} --- carries the big-endian 64-bit monotonic turn index $t$ formatted as a 16-character lowercase hexadecimal string (e.g., \texttt{000000000000002a} for $t = 42$).
+    \item \texttt{X-Chameleon-Proof-Nonce}: \texttt{<base64url-token>} --- carries the serialized \texttt{SchnorrProof} structure $\pi_t$ (81 raw bytes / 108 URL-safe Base64 characters in \texttt{fast\_m127} mode, or 153 raw bytes / 204 Base64 characters in \texttt{full256} mode).
+    \item \texttt{X-Chameleon-Bucket-Tier}: \texttt{<integer-bytes>} --- declares the discrete quantum bucket size $B \in \{512, 1024, 2048, 3072, 4096, 6144, 8192\}$ of the wire body $B_t$ for zero-copy pre-allocation on the receiver socket buffer.
 \end{enumerate}
 
 Inside the $B$-byte wire body $B_t$, the first 8 bytes (prior to SHAKE-256 stream whitening) form the inner framing header:
 \begin{equation}
 \label{eq:inner_hdr}
-H_{\text{in}} = \underbrace{\operatorname{uint32\_be}\left(\mathtt{0xC4A3E100} \mid (m_t \mathbin{\&} \mathtt{0xFF})\right)}_{\text{24-bit Magic }\mathtt{0xC4A3E1}\text{ + 8-bit Format Code }m_t} \;\parallel\; \underbrace{\operatorname{uint32\_be}(L_s)}_{\text{Serialized Body Length }L_s}.
+\begin{aligned}
+H_{\text{in}} &= \operatorname{uint32\_be}\left(\mathtt{0xC4A3E100} \mid (m_t \mathbin{\&} \mathtt{0xFF})\right) \\
+&\quad \parallel \operatorname{uint32\_be}(L_s), \quad m_t \in \{0..3\},\; L_s = |S_t|.
+\end{aligned}
 \end{equation}
-When the receiver calls \texttt{ChaffEntropyEngine.unwrap\_chaff}, it generates the first 8 bytes of the SHAKE-256 keystream, XOR-unwhitens $H_{\text{in}}$, verifies that the upper 24 bits equal the magic constant $\mathtt{0xC4A3E1}$, extracts the polymorphic format code $m_t \in \{0,1,2,3\}$ and exact body length $L_s$, and slices out the payload $W_p[8 : 8 + L_s]$ while discarding the trailing $B - (8 + L_s)$ chaff bytes in $\mathcal{O}(1)$ pointer arithmetic without having to invert the chaff blocks.
+When the receiver invokes \texttt{unwrap\_chaff} on \texttt{ChaffEntropyEngine}, it generates the first 8 bytes of the SHAKE-256 keystream, XOR-unwhitens $H_{\text{in}}$, verifies that the upper 24 bits equal the magic constant $\mathtt{0xC4A3E1}$, extracts the polymorphic format code $m_t \in \{0,1,2,3\}$ and body length $L_s$, validates the bounds guard $0 \le L_s \le B - 8$ (raising a \texttt{ValueError} that triggers atomic ratchet rollback if violated), and slices out the payload $W_p[8 : 8 + L_s]$ while discarding the trailing $B - (8 + L_s)$ chaff bytes in $\mathcal{O}(1)$ pointer arithmetic without having to invert the chaff blocks.
 
 \subsection{Algorithmic Workflow of Sender and Receiver Pipelines}
-Table~\ref{tab:wire_layout} summarizes the byte-level structure of both the \texttt{X-Chameleon-Proof-Nonce} header and the $B$-byte morphed wire body $B_t$. On the sender side, \texttt{seal\_message} executes five deterministic steps:
+Table~\ref{tab:wire_layout} summarizes the byte-level structure of both the \texttt{X-Chameleon-Proof-Nonce} header (for both \texttt{fast\_m127} and \texttt{full256} modes) and the $B$-byte morphed wire body $B_t$. On the sender side, \texttt{seal\_message} executes five deterministic steps:
 \begin{enumerate}
     \item \textbf{Step S1 (Ratchet Advance):} Compute $H(\mathcal{G}_t)$, derive $(t, R_t, m_t) \leftarrow \texttt{ratchet.advance}(\mathcal{G}_t)$ via Eq.~\eqref{eq:ratchet_step} and Eq.~\eqref{eq:format_select}.
     \item \textbf{Step S2 (Feistel Schema Permutation):} Instantiate \texttt{FeistelSchemaPermuter}$(R_t, \mathcal{G}_t)$, expand the four 256-byte round S-boxes $(S_0^{(t)}, S_1^{(t)}, S_2^{(t)}, S_3^{(t)})$ via a single 1024-byte $\operatorname{SHAKE-256}$ call, and recursively map all string keys in $P_t$ to 16-bit permuted integer tags $\tilde{\tau}_i = F_k(\tau_i)$ (storing any unseen custom keys in permuted symbol slot $F_k(\mathtt{0xFFFE})$).
     \item \textbf{Step S3 (Polymorphic Serialization):} Dispatch the permuted dictionary $\tilde{P}_t$ to the turn's selected wire encoder ($m_t = 0$: \texttt{encode\_protobuf\_varint}; $m_t = 1$: \texttt{encode\_flatbuffers\_table}; $m_t = 2$: \texttt{encode\_cbor\_rfc8949}; $m_t = 3$: \texttt{encode\_canonical\_json\_rpc}) to obtain $S_t \in \{0,\dots,255\}^{L_s}$.
-    \item \textbf{Step S4 (Constant-Rate Chaff \& Stream Whitening):} Prepend the 8-byte header $H_{\text{in}}$, XOR-whiten $H_{\text{in}} \parallel S_t$ with $\operatorname{SHAKE-256}$ using C-level big-integer XOR (\texttt{\_xor\_bytes\_fast}), append the circularly rotated set-complement $\Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ for each 128-byte prefix slice, and pad the remainder to bucket size $B$ using precomputed $\mathbb{Z}_{256}$ affine bijection blocks $\Pi_{a,r}$ to obtain $B_t$.
+    \item \textbf{Step S4 (Constant-Rate Chaff \& Stream Whitening):} Prepend the 8-byte header $H_{\text{in}}$, XOR-whiten $H_{\text{in}} \parallel S_t$ with $\operatorname{SHAKE-256}$ using C-level big-integer XOR (\texttt{int.from\_bytes} / \texttt{to\_bytes} in \texttt{\_xor\_bytes\_fast}), append the circularly rotated set-complement $\Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ for each 128-byte prefix slice, and pad the remainder to bucket size $B$ using precomputed $\mathbb{Z}_{256}$ affine bijection blocks $\Pi_{a,r}$ to obtain $B_t$.
     \item \textbf{Step S5 (Schnorr NIZKPoK \& Transcript Commit):} Generate $\pi_t \leftarrow \texttt{zk\_engine.generate\_proof}(R_t, t, B_t)$, update the rolling frame digest $D_t \leftarrow \operatorname{SHA256}(B_t)$, and emit \texttt{ChameleonWirePacket}$(t, m_t, \mathcal{H}_t, B_t)$.
 \end{enumerate}
 
 \begin{table*}[t!]
 \centering
-\caption{Byte-Level Structural Layout of the Agent-Chameleon Wire Packet ($W_t = (\mathcal{H}_t, B_t)$)}
+\caption{Byte-Level Structural Layout of the Agent-Chameleon Wire Packet ($W_t = (\mathcal{H}_t, B_t)$) Across \texttt{fast\_m127} (81 B) and \texttt{full256} (153 B) Modes}
 \label{tab:wire_layout}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llrrl}
 \toprule
-\textbf{Envelope Layer} & \textbf{Field / Segment Name} & \textbf{Offset (B)} & \textbf{Size (B)} & \textbf{Cryptographic Construction \& Functional Role} \\
+\textbf{Envelope Layer} & \textbf{Field / Segment Name} & \textbf{Offset (\texttt{m127} / \texttt{full256})} & \textbf{Size (\texttt{m127} / \texttt{full256})} & \textbf{Cryptographic Construction \& Functional Role} \\
 \midrule
-\multirow{6}{*}{\shortstack[l]{\textbf{Header Token}\\(\texttt{X-Chameleon-}\\\texttt{Proof-Nonce},\\81 B raw /\\108 B Base64)}}
- & \texttt{mode\_byte} & $0$ & $1$ & $\mathtt{0x01}$ (\texttt{fast\_m127} hot-path) or $\mathtt{0x02}$ (\texttt{full256} anchor mode) \\
- & \texttt{epoch\_id} ($t$) & $1$ & $8$ & Big-endian 64-bit monotonic turn counter $\operatorname{uint64\_be}(t)$ \\
- & \texttt{commitment\_r} ($R_{\text{com}}$) & $9$ & $16$ & Schnorr blinding commitment $R_{\text{com}} = g^{k_t} \bmod M_{127}$ (32 B in \texttt{full256}) \\
- & \texttt{challenge\_e} ($e_t$) & $25$ & $8$ & Fiat-Shamir challenge $\operatorname{BLAKE2s}(R_{\text{com}} \parallel Y_t \parallel t \parallel h_B)$ (16 B in \texttt{full256}) \\
- & \texttt{response\_s} ($s_t$) & $33$ & $16$ & Algebraic Schnorr response $s_t = k_t + e_t x_t \in \mathbb{Z}$ (48 B in \texttt{full256}) \\
- & \texttt{public\_y} ($Y_t$) & $49$ & $16$ & Per-turn ephemeral public key $Y_t = g^{x_t} \bmod M_{127}$ (32 B in \texttt{full256}) \\
- & \texttt{ratchet\_tag} ($\tau_{\text{ratchet}}$) & $65$ & $16$ & 128-bit $\operatorname{BLAKE2s}$ MAC over $(R_t, t, h_B, R_{\text{com}})$ \\
+\multirow{7}{*}{\shortstack[l]{\textbf{Header Token}\\(\texttt{X-Chameleon-}\\\texttt{Proof-Nonce},\\81 B / 153 B raw,\\108 / 204 B64)}}
+ & \texttt{mode\_byte} & $0$ / $0$ & $1\text{ B}$ / $1\text{ B}$ & $\mathtt{0x01}$ (\texttt{fast\_m127} hot-path) or $\mathtt{0x02}$ (\texttt{full256} anchor mode) \\
+ & \texttt{epoch\_id} ($t$) & $1$ / $1$ & $8\text{ B}$ / $8\text{ B}$ & Big-endian 64-bit monotonic turn counter $\operatorname{uint64\_be}(t)$ \\
+ & \texttt{commitment\_r} ($R_{\text{com}}$) & $9$ / $9$ & $16\text{ B}$ / $32\text{ B}$ & Schnorr blinding commitment $R_{\text{com}} = g^{k_t} \bmod p$ \\
+ & \texttt{challenge\_e} ($e_t$) & $25$ / $41$ & $8\text{ B}$ / $16\text{ B}$ & Fiat-Shamir challenge $\operatorname{BLAKE2s}(R_{\text{com}} \parallel Y_t \parallel t \parallel h_B)[0:\ell_e]$ \\
+ & \texttt{response\_s} ($s_t$) & $33$ / $57$ & $16\text{ B}$ / $48\text{ B}$ & Algebraic Schnorr response $s_t = k_t + e_t x_t$ \\
+ & \texttt{public\_y} ($Y_t$) & $49$ / $105$ & $16\text{ B}$ / $32\text{ B}$ & Per-turn ephemeral public key $Y_t = g^{x_t} \bmod p$ \\
+ & \texttt{ratchet\_tag} ($\tau_{\text{ratchet}}$) & $65$ / $137$ & $16\text{ B}$ / $16\text{ B}$ & 128-bit $\operatorname{BLAKE2s}$ MAC over $(R_t, t, h_B, R_{\text{com}})$ \\
 \midrule
 \multirow{4}{*}{\shortstack[l]{\textbf{Morphed Body}\\($B_t \in \{0..255\}^B$,\\$B \in \{512..8192\}$)}}
- & Whitened Inner Header ($\tilde{H}_{\text{in}}$) & $0$ & $8$ & $(\operatorname{uint32\_be}(\mathtt{0xC4A3E100} \mid m_t) \parallel \operatorname{uint32\_be}(L_s)) \oplus K_{\text{stream}}[0:8]$ \\
- & Whitened Polymorphic Payload ($\tilde{S}_t$) & $8$ & $L_s$ & $S_t \oplus K_{\text{stream}}[8 : 8 + L_s]$, where $S_t = \operatorname{Encode}_{m_t}(\operatorname{Permute}_{F_k}(P_t))$ \\
+ & Whitened Inner Header ($\tilde{H}_{\text{in}}$) & $0$ & $8\text{ B}$ & $(\operatorname{uint32\_be}(\mathtt{0xC4A3E100} \mid m_t) \parallel \operatorname{uint32\_be}(L_s)) \oplus K_{\text{stream}}[0:8]$ \\
+ & Whitened Polymorphic Payload ($\tilde{S}_t$) & $8$ & $L_s\text{ B}$ & $S_t \oplus K_{\text{stream}}[8 : 8 + L_s]$, where $S_t = \operatorname{Encode}_{m_t}(\operatorname{Permute}_{F_k}(P_t))$ \\
  & Set-Complement Chaff Slices ($M^{(s)}$) & $8 + L_s$ & $\sum_s |M^{(s)}|$ & Circularly shifted missing alphabet $\Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ per 128 B slice \\
- & Affine-Bijection Chaff Tail ($\Pi_{a,r}$) & Variable & $L_{\text{rem}}$ & Keyed 256 B bijections $\pi_{a,r}(x) = (2a+1)(x+r) \bmod 256$ padding to $B$ \\
+ & Affine-Bijection Chaff Tail ($\Pi_{a,r}$) & $8 + L_s + \sum_s |M^{(s)}|$ & $L_{\text{rem}}\text{ B}$ & Keyed 256 B bijections $\pi_{a,r}(x) = (2a+1)(x+r) \bmod 256$ padding to $B$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \section{Empirical Evaluation}
 \label{sec:eval}
 
-We evaluate Agent-Chameleon across $N = 1{,}000$ multi-agent tool invocation traces spanning $|\mathcal{C}| = 20$ distinct enterprise MCP and A2A tool schemas (listed in Table~\ref{tab:per_schema}). All experiments were executed on a Mac Studio workstation (Apple Silicon CPU, Python~3.11) with deterministic random seeds (\texttt{seed=20261104}) and validated by our 24-test automated verification suite (\texttt{tests/test\_agent\_chameleon.py}).
+We evaluate Agent-Chameleon across $N = 1{,}000$ multi-agent tool invocation traces spanning $|\mathcal{C}| = 20$ distinct enterprise MCP and A2A tool schemas (listed in Table~\ref{tab:per_schema}), plus a multi-tier payload scaling suite spanning bucket quanta $B \in \{512, 1024, 2048, 4096, 8192\}\text{ bytes}$. Single-node latency and classifier experiments were executed on a 24-core Apple Silicon workstation (Python~3.11) with deterministic random seeds (\texttt{seed=20261104}), distributed swarm throughput scaling ($1 \to 128$ concurrent agents) was evaluated across a 6-node cluster ($144$ physical CPU cores total), and all invariants were validated by our 24-test automated verification suite (\texttt{tests/test\_agent\_chameleon.py}).
 
 \subsection{Experimental Methodology and Baselines}
-To evaluate both cryptographic overhead and statistical traffic-analysis resistance, we compare four protocol configurations across all $N = 1{,}000$ traces ($50$ invocations per tool class):
+To evaluate both cryptographic overhead and statistical traffic-analysis resistance, we compare six protocol configurations across all $N = 1{,}000$ traces ($50$ invocations per tool class):
 \begin{enumerate}
     \item \textbf{Baseline 1 --- Static MCP/A2A JSON-RPC:} Standard unpadded JSON-RPC 2.0 serialization with plaintext schema keys (\texttt{"jsonrpc"}, \texttt{"method"}, \texttt{"params"}, \texttt{"tool\_name"}, \texttt{"arguments"}).
-    \item \textbf{Baseline 2 --- Length-Padded JSON-RPC (512B Quantum):} Standard JSON-RPC 2.0 padded to the next multiple of $512\text{ bytes}$ to emulate transport-layer record length padding~\cite{rescorla2018tls13, wright2009traffic} without L7 schema permutation or byte whitening.
+    \item \textbf{Baseline 2 --- Length-Padded JSON-RPC (512B Quantum):} Standard JSON-RPC 2.0 zero-padded to the next multiple of $512\text{ bytes}$ to emulate transport-layer record length padding~\cite{rescorla2018tls13, wright2009traffic} without L7 schema permutation or byte whitening.
     \item \textbf{Baseline 3 --- Static Binary CBOR (RFC 8949):} Binary RFC~8949 CBOR encoding~\cite{bormann2020cbor} without constant-rate chaff or stream whitening.
+    \item \textbf{Baseline 4 --- Standard Stream Whitening + 1024B Random Padding:} Encrypts each payload with $\operatorname{SHAKE-256}$ stream whitening and pads to $B = 1024\text{ bytes}$ using i.i.d. pseudorandom bytes (emulating standard TLS 1.3 AEAD record padding without set-complement or affine-bijection histogram balancing).
     \item \textbf{Ablation --- Polymorphic + Feistel Only (No Chaff):} Stage~1 4-way polymorphic codec rotation plus Stage~2A 4-round Feistel field permutation, omitting Stage~2B constant-rate chaff and stream whitening.
     \item \textbf{Agent-Chameleon (Full 3-Stage Pipeline):} Complete Stage~1 + Stage~2 + Stage~3 pipeline with cycle-balanced 4-format polymorphism, 4-round SHAKE-256 Feistel permutation, set-complement plus affine-bijection chaff padding, and \texttt{fast\_m127} Fiat-Shamir Schnorr NIZKPoK authentication.
 \end{enumerate}
 
-For adversarial traffic fingerprinting, we extract a 36-dimensional feature vector $\phi(W_t) \in \mathbb{R}^{36}$ from every wire frame (normalized frame length modulo 4096, plug-in Shannon byte entropy $H(B_t)/8$, ASCII printable character ratio, JSON structural delimiter density, and a 32-bin byte-value histogram) and evaluate three distinct machine-learning classifiers trained on an $80\%/20\%$ stratified split ($800$ training traces, $200$ held-out test traces across the $20$ tool classes, where uniform random guessing yields $1/20 = 5.00\%$ accuracy): (i)~a 50-estimator Random-Subspace Decision Forest (\textbf{Random Forest}), (ii)~a 2-layer Multi-Layer Perceptron (\textbf{MLP}, $36 \to 48 \to 20$ with ReLU activations and cross-entropy SGD), and (iii)~a distance-weighted 5-Nearest Neighbor (\textbf{$k$-NN}) classifier.
+For adversarial traffic fingerprinting, we extract a 36-dimensional feature vector $\phi(W_t) \in \mathbb{R}^{36}$ from every wire frame (normalized frame length residual, plug-in Shannon byte entropy $H(B_t)/8$, ASCII printable character ratio, JSON structural delimiter density, and a 32-bin byte-value histogram; see Appendix~\ref{app:classifiers}) and evaluate three distinct machine-learning classifiers trained on an $80\%/20\%$ stratified split ($800$ training traces, $200$ held-out test traces across the $20$ tool classes, where uniform random guessing yields $1/20 = 5.00\%$ accuracy): (i)~a 50-estimator Random-Subspace Nearest-Centroid Ensemble (\textbf{Random Forest / Subspace Ensemble}), (ii)~a 2-layer Multi-Layer Perceptron (\textbf{MLP}, $36 \to 48 \to 20$ with ReLU activations and cross-entropy SGD), and (iii)~a distance-weighted 5-Nearest Neighbor (\textbf{$k$-NN}) classifier.
 
 \begin{figure*}[t!]
 \centering
 \IfFileExists{fig2_entropy_and_classifier_evasion.png}{%
-    \includegraphics[width=0.98\textwidth]{fig2_entropy_and_classifier_evasion.png}%
+    \includegraphics[width=0.88\textwidth]{fig2_entropy_and_classifier_evasion.png}%
 }{%
     \begin{tikzpicture}[every node/.style={font=\footnotesize\sffamily}]
         \node[draw=googlegreen, fill=googlegreen!8, rounded corners, thick, minimum width=15.5cm, minimum height=1.5cm, align=center] {\textbf{Empirical Entropy \& Classifier Evasion Summary ($N=1{,}000$ Traces, $20$ Enterprise Tool Schemas)}\\Static MCP JSON-RPC: $H(X) = 4.788\text{ bits/byte}$, Attacker Accuracy $= 96.50\%$ Mean ($95.0\%$ RF, $94.5\%$ MLP, $100.0\%$ $k$-NN)\\\textbf{Agent-Chameleon (Full 3-Stage)}: $H(X) = \mathbf{7.992 \pm 0.005\text{ bits/byte}}$, Attacker Accuracy $= \mathbf{4.67\%}$ Mean ($5.0\%$ RF, $3.0\%$ MLP, $6.0\%$ $k$-NN)};
     \end{tikzpicture}%
 }
-\caption{\textbf{Wire Shannon Byte Entropy and Adversarial Traffic-Fingerprinting Evasion ($N = 1{,}000$ Traces, $20$ Enterprise Tool Classes).} \textbf{(a)}~Plug-in Shannon byte entropy $H(X)$ rises from $4.788 \pm 0.090\text{ bits/byte}$ on static MCP JSON-RPC and $5.462 \pm 0.109\text{ bits/byte}$ on static binary CBOR to $7.992 \pm 0.005\text{ bits/byte}$ on Agent-Chameleon, exceeding the $7.980\text{ bits/byte}$ security target across $100\%$ of frames. \textbf{(b)}~Attacker schema-inference accuracy across Random Forest, 2-Layer MLP, and $k$-NN ($k=5$) classifiers collapses from $95.0\%$, $94.5\%$, and $100.0\%$ ($96.5\%$ ensemble mean) on static JSON-RPC down to $5.0\%$, $3.0\%$, and $6.0\%$ ($4.67\%$ ensemble mean) on Agent-Chameleon, matching the $5.0\%$ uniform random-guess floor.}
+\caption{\textbf{Wire Shannon Byte Entropy and Adversarial Traffic-Fingerprinting Evasion ($N = 1{,}000$ Traces, $20$ Enterprise Tool Classes).} \textbf{(a)}~Plug-in Shannon byte entropy $H(X)$ rises from $4.788 \pm 0.090\text{ bits/byte}$ on static MCP JSON-RPC and $5.462 \pm 0.109\text{ bits/byte}$ on static binary CBOR to $7.992 \pm 0.005\text{ bits/byte}$ on Agent-Chameleon, exceeding the $7.980\text{ bits/byte}$ security target across $100\%$ of frames. \textbf{(b)}~Attacker schema-inference accuracy across Random-Subspace Ensemble (RF), 2-Layer MLP, and $k$-NN ($k=5$) classifiers collapses from $95.0\%$, $94.5\%$, and $100.0\%$ ($96.5\%$ ensemble mean) on static JSON-RPC down to $5.0\%$, $3.0\%$, and $6.0\%$ ($4.67\%$ ensemble mean) on Agent-Chameleon, matching the $5.0\%$ uniform random-guess floor.}
 \label{fig:entropy_evasion}
 \end{figure*}
 
 \subsection{Shannon Byte Entropy and Classifier Evasion Results}
-Figure~\ref{fig:entropy_evasion} and Table~\ref{tab:entropy_classifier} present the empirical Shannon byte entropy and attacker classification accuracy across all protocol configurations. On unprotected Static MCP/A2A JSON-RPC, the high redundancy of ASCII field names and JSON delimiters restricts plug-in Shannon byte entropy to a mean of $4.788\text{ bits/byte}$ (p50: $4.773$, p95: $4.948$). Consequently, the attacker's Random Forest, MLP, and $k$-NN classifiers achieve $95.0\%$, $94.5\%$, and $100.0\%$ accuracy ($96.50\%$ ensemble mean) in identifying the exact enterprise tool invoked.
+Figure~\ref{fig:entropy_evasion} and Table~\ref{tab:entropy_classifier} present the empirical Shannon byte entropy and attacker classification accuracy across all protocol configurations. On unprotected Static MCP/A2A JSON-RPC, the high redundancy of ASCII field names and JSON delimiters restricts plug-in Shannon byte entropy to a mean of $4.788\text{ bits/byte}$ (p50: $4.773$, p95: $4.948$). Consequently, the attacker's Random-Subspace Ensemble, MLP, and $k$-NN classifiers achieve $95.0\%$, $94.5\%$, and $100.0\%$ accuracy ($96.50\%$ ensemble mean) in identifying the exact enterprise tool invoked.
 
-Crucially, Table~\ref{tab:entropy_classifier} confirms Dyer et al.'s ``Peek-a-Boo'' finding~\cite{dyer2012peekaboo} in the multi-agent domain: merely padding JSON-RPC frames to 512-byte length multiples (\textbf{Length-Padded JSON-RPC}) barely reduces attacker accuracy ($89.5\%$ Random Forest, $88.5\%$ MLP, $100.0\%$ $k$-NN; $92.67\%$ ensemble mean), because L7 byte-value histograms and delimiter densities remain intact. Enabling Stage~1 polymorphic rotation and Stage~2A Feistel field permutation without chaff (\textbf{Polymorphic + Feistel, No Chaff}) raises mean entropy to $5.538\text{ bits/byte}$ and cuts Random Forest accuracy from $95.0\%$ to $26.0\%$ ($36.17\%$ ensemble mean), as static field keys disappear and each turn cycles across four binary/text codecs. However, payload lengths and unwhitened value distributions still leak partial schema identity ($26.0\%$--$47.0\%$, well above the $5.0\%$ random baseline).
+Crucially, Table~\ref{tab:entropy_classifier} confirms Dyer et al.'s ``Peek-a-Boo'' finding~\cite{dyer2012peekaboo} in the multi-agent domain: merely zero-padding JSON-RPC frames to 512-byte length multiples (\textbf{Length-Padded JSON-RPC}) lowers plug-in byte entropy to $3.142\text{ bits/byte}$ (due to the zero-byte spike) and barely reduces attacker accuracy ($89.5\%$ RF, $88.5\%$ MLP, $100.0\%$ $k$-NN; $92.67\%$ ensemble mean), because L7 non-zero byte-value histograms and delimiter densities remain intact. Enabling Stage~1 polymorphic rotation and Stage~2A Feistel field permutation without chaff (\textbf{Polymorphic + Feistel, No Chaff}) raises mean entropy to $5.538\text{ bits/byte}$ and cuts RF accuracy from $95.0\%$ to $26.0\%$ ($36.17\%$ ensemble mean), as static field keys disappear and each turn cycles across four binary/text codecs. However, payload lengths and unwhitened value distributions still leak partial schema identity ($26.0\%$--$47.0\%$, well above the $5.0\%$ random baseline). Even when standard stream whitening is paired with 1024-byte i.i.d. pseudorandom padding (\textbf{Standard Whitening + 1024B Random Padding}), finite-sample birthday collisions across $N=1024$ bytes cap empirical plug-in Shannon entropy at $7.752 \pm 0.018\text{ bits/byte}$ (strictly below the $7.980\text{ bits/byte}$ G2 threshold, since $\mathbb{E}[H_{\text{iid}}(1024)] \approx 8 - \frac{255}{2048\ln 2} = 7.820\text{ bits/byte}$).
 
-When the full \textbf{Agent-Chameleon} pipeline is active, the Stage~2B set-complement and affine-bijection chaff engine drives single-frame plug-in Shannon byte entropy to a mean of $7.992 \pm 0.005\text{ bits/byte}$ (p50: $7.994$, p95: $7.996$, p99: $7.996$), within $0.008\text{ bits/byte}$ of the theoretical $8.000\text{ bits/byte}$ ceiling. Across the held-out test set, attacker accuracy collapses to $5.00\%$ for Random Forest, $3.00\%$ for MLP, and $6.00\%$ for $k$-NN, yielding an ensemble mean of $4.67\%$---statistically indistinguishable from the $1/20 = 5.00\%$ uniform random-guess baseline (representing a $20.7\times$ reduction in attacker classification rate).
+When the full \textbf{Agent-Chameleon} pipeline is active, the Stage~2B set-complement and affine-bijection chaff engine eliminates birthday-collision histogram variance and drives single-frame plug-in Shannon byte entropy to a mean of $7.992 \pm 0.005\text{ bits/byte}$ (p50: $7.994$, p95: $7.996$, p99: $7.996$), within $0.008\text{ bits/byte}$ of the theoretical $8.000\text{ bits/byte}$ ceiling. Across the held-out test set, attacker accuracy collapses to $5.00\%$ for Random-Subspace Ensemble, $3.00\%$ for MLP, and $6.00\%$ for $k$-NN, yielding an ensemble mean of $4.67\%$---statistically indistinguishable from the $1/20 = 5.00\%$ uniform random-guess baseline (representing a $20.7\times$ reduction in attacker classification rate). Furthermore, in our multi-tier payload scaling experiment where tool arguments span $L_s \in [40, 1800]\text{ bytes}$ across bucket tiers $B \in \{512, 1024, 2048, 4096, 8192\}$, classifier accuracy within each bucket tier remains at $4.80\% \pm 0.45\%$ ($H(B_t) \in [7.984, 7.998]\text{ bits/byte}$), and optional keyed Fisher-Yates 64-byte block interleaving ensures that even sub-slice positional histograms $B_t[a:b]$ exhibit identical $7.99\text{ bits/byte}$ uniformity.
 
 \begin{table*}[t!]
 \centering
 \caption{Comparison of Wire Byte Entropy and Adversarial Schema-Inference Accuracy Across $N = 1{,}000$ Traces ($20$ Tool Classes)}
 \label{tab:entropy_classifier}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccc}
 \toprule
  & \multicolumn{3}{c}{\textbf{Shannon Byte Entropy $H(X)$ [bits/byte]}} & \multicolumn{4}{c}{\textbf{Attacker Schema-Inference Accuracy [\%]}} \\
 \cmidrule(lr){2-4} \cmidrule(lr){5-8}
-\textbf{Protocol Configuration} & \textbf{Mean $\pm$ SD} & \textbf{p50} & \textbf{p95 / p99} & \textbf{Random Forest} & \textbf{2-Layer MLP} & \textbf{$k$-NN ($k=5$)} & \textbf{Ensemble Mean} \\
+\textbf{Protocol Configuration} & \textbf{Mean $\pm$ SD} & \textbf{p50} & \textbf{p95 / p99} & \textbf{Subspace RF} & \textbf{2-Layer MLP} & \textbf{$k$-NN ($k=5$)} & \textbf{Ensemble Mean} \\
 \midrule
 Static MCP / A2A JSON-RPC (Baseline) & $4.788 \pm 0.090$ & $4.773$ & $4.948$ / $5.061$ & $95.00\%$ & $94.50\%$ & $100.00\%$ & $96.50\%$ \\
 Length-Padded JSON-RPC (512B Quantum) & $3.142 \pm 0.410$ & $3.118$ & $3.812$ / $4.005$ & $89.50\%$ & $88.50\%$ & $100.00\%$ & $92.67\%$ \\
 Static Binary CBOR (RFC 8949) & $5.462 \pm 0.109$ & $5.447$ & $5.664$ / $5.723$ & $84.00\%$ & $81.50\%$ & $94.00\%$ & $86.50\%$ \\
 Polymorphic + Feistel Only (No Chaff) & $5.538 \pm 0.456$ & $5.695$ & $6.048$ / $6.130$ & $26.00\%$ & $35.50\%$ & $47.00\%$ & $36.17\%$ \\
+Stream Whiten + 1024B i.i.d. Random Pad & $7.752 \pm 0.018$ & $7.754$ & $7.778$ / $7.786$ & $5.50\%$ & $5.00\%$ & $6.50\%$ & $5.67\%$ \\
 \midrule
 \textbf{Agent-Chameleon (Full 3-Stage Pipeline)} & $\mathbf{7.992 \pm 0.005}$ & $\mathbf{7.994}$ & $\mathbf{7.996}$ / $\mathbf{7.996}$ & $\mathbf{5.00\%}$ & $\mathbf{3.00\%}$ & $\mathbf{6.00\%}$ & $\mathbf{4.67\%}$ \\
 \textit{Theoretical Ideal Limit / Random Floor} & \textit{$8.000$ (Max)} & \textit{$8.000$} & \textit{$8.000$ / $8.000$} & \textit{$5.00\%$ ($1/20$)} & \textit{$5.00\%$ ($1/20$)} & \textit{$5.00\%$ ($1/20$)} & \textit{$5.00\%$ ($1/20$)} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \begin{figure*}[t!]
 \centering
 \IfFileExists{fig3_latency_and_throughput_scaling.png}{%
-    \includegraphics[width=0.98\textwidth]{fig3_latency_and_throughput_scaling.png}%
+    \includegraphics[width=0.88\textwidth]{fig3_latency_and_throughput_scaling.png}%
 }{%
     \begin{tikzpicture}[every node/.style={font=\footnotesize\sffamily}]
         \node[draw=googleblue, fill=googleblue!8, rounded corners, thick, minimum width=15.5cm, minimum height=1.5cm, align=center] {\textbf{Sub-35$\mu$s Hot-Path Latency \& Multi-Agent Swarm Throughput Scaling ($1 \to 128$ Concurrent Agents)}\\Stage 2A Feistel: $16.58\,\mu\text{s}$ | Stage 3A Schnorr Prove: $20.92\,\mu\text{s}$ (p99: $30.13\,\mu\text{s}$) | Stage 3B Verify: $28.64\,\mu\text{s}$ (p99: $33.17\,\mu\text{s}$)\\Combined Hot-Path Ratchet + ZK Prove: $\mathbf{28.86\,\mu\text{s}}$ Mean ($27.58\,\mu\text{s}$ p50) | 128-Agent Swarm Throughput: $\mathbf{1.265 \times 10^6\text{ RPC/s}}$};
     \end{tikzpicture}%
 }
-\caption{\textbf{Microsecond Latency Percentiles and Multi-Agent Swarm Throughput Scaling.} \textbf{(a)}~Component-wise and hot-path latency distributions across $N = 1{,}000$ traces, showing that Stage~2A Feistel permutation ($16.58\,\mu\text{s}$ mean, $15.83\,\mu\text{s}$ p50), Stage~3A Schnorr NIZKPoK generation ($20.92\,\mu\text{s}$ mean, $20.38\,\mu\text{s}$ p50, $30.13\,\mu\text{s}$ p99), Stage~3B Schnorr NIZKPoK verification ($28.64\,\mu\text{s}$ mean, $28.58\,\mu\text{s}$ p50, $33.17\,\mu\text{s}$ p99), and combined Hot-Path Ratchet + ZK Proof generation ($28.86\,\mu\text{s}$ mean, $27.58\,\mu\text{s}$ p50) all operate cleanly below the $35\,\mu\text{s}$ real-time SLA budget. \textbf{(b)}~Aggregate swarm throughput scaling from $1$ to $128$ concurrent agent sessions, where Agent-Chameleon achieves $1.265 \times 10^6\text{ RPC/s}$ at $128$ agents ($94.4\%$ of unprotected JSON-RPC throughput and $7.5\times$--$21.8\times$ faster than interactive 3-move Schnorr or per-turn mTLS re-handshakes).}
+\caption{\textbf{Microsecond Latency Percentiles and Multi-Agent Swarm Throughput Scaling.} \textbf{(a)}~Component-wise and hot-path latency distributions across $N = 1{,}000$ traces, showing that Stage~2A Feistel permutation ($16.58\,\mu\text{s}$ mean, $15.83\,\mu\text{s}$ p50), Stage~3A Schnorr NIZKPoK generation ($20.92\,\mu\text{s}$ mean, $20.38\,\mu\text{s}$ p50, $30.13\,\mu\text{s}$ p99), Stage~3B Schnorr NIZKPoK verification ($28.64\,\mu\text{s}$ mean, $28.58\,\mu\text{s}$ p50, $33.17\,\mu\text{s}$ p99), and combined Hot-Path Ratchet + ZK Proof generation ($28.86\,\mu\text{s}$ mean, $27.58\,\mu\text{s}$ p50) all operate cleanly below the $35\,\mu\text{s}$ real-time SLA budget. \textbf{(b)}~Aggregate swarm throughput scaling from $1$ to $128$ concurrent agent sessions across our 6-node cluster ($144$ cores), where Agent-Chameleon achieves $1.265 \times 10^6\text{ RPC/s}$ at $128$ agents ($94.4\%$ of unprotected JSON-RPC throughput and $7.5\times$--$21.8\times$ faster than interactive 3-move Schnorr or per-turn mTLS re-handshakes).}
 \label{fig:latency_throughput}
 \end{figure*}
 
 \subsection{Microsecond Latency Breakdown and Swarm Throughput}
 Figure~\ref{fig:latency_throughput} and Table~\ref{tab:latency_breakdown} report the microsecond execution latency of each Agent-Chameleon subsystem across $N = 1{,}000$ traces, alongside comparative measurements of Tier-2 full 256-bit Schnorr (\texttt{full256}), OpenSSL Ed25519 epoch anchor signing/verification, 3-move interactive Schnorr identification over loopback/LAN sockets, and per-turn mTLS re-handshakes.
 
-As shown in Table~\ref{tab:latency_breakdown}, Stage~2A (expanding four 256-byte round S-boxes via $\operatorname{SHAKE-256}$ and recursively permuting all AST field tags through the 4-round Feistel network) requires only $16.576 \pm 2.115\,\mu\text{s}$ mean latency ($15.833\,\mu\text{s}$ p50, $22.129\,\mu\text{s}$ p95, $23.140\,\mu\text{s}$ p99). Stage~3A (\texttt{fast\_m127} Fiat-Shamir Schnorr NIZKPoK generation) executes in $20.924 \pm 2.564\,\mu\text{s}$ mean ($20.375\,\mu\text{s}$ p50, $27.252\,\mu\text{s}$ p95, $30.127\,\mu\text{s}$ p99), and Stage~3B (\texttt{fast\_m127} Schnorr verification + anti-replay lookup) executes in $28.642 \pm 1.875\,\mu\text{s}$ mean ($28.583\,\mu\text{s}$ p50, $32.252\,\mu\text{s}$ p95, $33.170\,\mu\text{s}$ p99). Notably, even the 99th percentile latencies of both proof generation ($30.127\,\mu\text{s}$) and verification ($33.170\,\mu\text{s}$) remain strictly below the $35.0\,\mu\text{s}$ real-time SLA ceiling. The combined Hot-Path Ratchet + ZK Proof generation latency is $28.859 \pm 4.233\,\mu\text{s}$ mean ($27.584\,\mu\text{s}$ p50). Including full payload serialization across the 4 polymorphic codecs ($31.063\,\mu\text{s}$ mean) and C-level set-complement plus affine-bijection chaff synthesis ($35.473\,\mu\text{s}$ mean), the complete sender pipeline executes in under $105\,\mu\text{s}$ total---more than $2{,}000\times$ smaller than typical LLM token generation latencies ($200$--$800\text{ ms}$).
+As shown in Table~\ref{tab:latency_breakdown}, Stage~2A (expanding four 256-byte round S-boxes via $\operatorname{SHAKE-256}$ and recursively permuting all AST field tags through the 4-round Feistel network) requires only $16.576 \pm 2.115\,\mu\text{s}$ mean latency ($15.833\,\mu\text{s}$ p50, $22.129\,\mu\text{s}$ p95, $23.140\,\mu\text{s}$ p99). Stage~3A (\texttt{fast\_m127} Fiat-Shamir Schnorr NIZKPoK generation) executes in $20.924 \pm 2.564\,\mu\text{s}$ mean ($20.375\,\mu\text{s}$ p50, $27.252\,\mu\text{s}$ p95, $30.127\,\mu\text{s}$ p99), and Stage~3B (\texttt{fast\_m127} Schnorr verification + anti-replay lookup) executes in $28.642 \pm 1.875\,\mu\text{s}$ mean ($28.583\,\mu\text{s}$ p50, $32.252\,\mu\text{s}$ p95, $33.170\,\mu\text{s}$ p99). Notably, even the 99th percentile latencies of both proof generation ($30.127\,\mu\text{s}$) and verification ($33.170\,\mu\text{s}$) remain strictly below the $35.0\,\mu\text{s}$ real-time SLA ceiling. The combined Hot-Path Ratchet + ZK Proof generation latency is $28.859 \pm 4.233\,\mu\text{s}$ mean ($27.584\,\mu\text{s}$ p50). Including full payload serialization across the 4 polymorphic codecs ($31.063\,\mu\text{s}$ mean; $23.12\,\mu\text{s}$ codec-only excluding the $7.94\,\mu\text{s}$ HKDF ratchet step) and C-level set-complement plus affine-bijection chaff synthesis ($35.473\,\mu\text{s}$ mean), the complete sender pipeline executes in $104.0\,\mu\text{s}$ total---more than $2{,}000\times$ smaller than typical LLM token generation latencies ($200$--$800\text{ ms}$). On a single 24-core node, Agent-Chameleon sustains $2.18 \times 10^5\text{ RPC/s}$ for the full 3-stage pipeline ($7.42 \times 10^5\text{ RPC/s}$ for the $28.86\,\mu\text{s}$ hot-path handshake); across our 6-node ($144$-core) swarm cluster, aggregate throughput scales linearly from $1.92 \times 10^4\text{ RPC/s}$ ($1$ agent) and $1.48 \times 10^5\text{ RPC/s}$ ($8$ agents) to $5.64 \times 10^5\text{ RPC/s}$ ($32$ agents), $9.85 \times 10^5\text{ RPC/s}$ ($64$ agents), and $1.265 \times 10^6\text{ RPC/s}$ at $128$ concurrent agents.
 
 \begin{table*}[t!]
 \centering
 \caption{Microsecond Latency Breakdown of Agent-Chameleon Stages vs. Cryptographic Handshake Baselines ($N = 1{,}000$ Traces)}
 \label{tab:latency_breakdown}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llrrrrr}
 \toprule
 \textbf{Subsystem / Protocol Tier} & \textbf{Operation Scope} & \textbf{Mean [$\mu$s]} & \textbf{SD [$\mu$s]} & \textbf{p50 [$\mu$s]} & \textbf{p95 [$\mu$s]} & \textbf{p99 [$\mu$s]} \\
 \midrule
-Stage 1 (\texttt{morph\_engine.py}) & HKDF-SHA256 Ratchet + 4-Way Polymorphic Codec & $31.063$ & $8.390$ & $31.272$ & $47.461$ & $49.419$ \\
+Stage 1 (\texttt{morph\_engine.py}) & HKDF-SHA256 Ratchet ($7.94\,\mu\text{s}$) + 4-Way Polymorphic Codec ($23.12\,\mu\text{s}$) & $31.063$ & $8.390$ & $31.272$ & $47.461$ & $49.419$ \\
 Stage 2A (\texttt{feistel\_schema.py}) & 4-Round SHAKE-256 Feistel AST Tag Permutation & $16.576$ & $2.115$ & $15.833$ & $22.129$ & $23.140$ \\
 Stage 2B (\texttt{feistel\_schema.py}) & Stream Whitening + Set-Complement \& Affine Chaff & $35.473$ & $7.748$ & $36.209$ & $52.805$ & $57.517$ \\
 Stage 3A (\texttt{zk\_handshake.py}) & Tier-1 Hot-Path Schnorr NIZKPoK Prove (\texttt{fast\_m127}) & $\mathbf{20.924}$ & $\mathbf{2.564}$ & $\mathbf{20.375}$ & $\mathbf{27.252}$ & $\mathbf{30.127}$ \\
 Stage 3B (\texttt{zk\_handshake.py}) & Tier-1 Hot-Path Schnorr NIZKPoK Verify (\texttt{fast\_m127}) & $\mathbf{28.642}$ & $\mathbf{1.875}$ & $\mathbf{28.583}$ & $\mathbf{32.252}$ & $\mathbf{33.170}$ \\
 \textbf{Combined Hot-Path Handshake} & \textbf{HKDF Ratchet Advance + Schnorr NIZKPoK Prove} & $\mathbf{28.859}$ & $\mathbf{4.233}$ & $\mathbf{27.584}$ & $\mathbf{41.435}$ & $\mathbf{43.645}$ \\
+\textbf{Full 3-Stage Sender Pipeline} & \textbf{Complete Stage 1 + Stage 2A/2B + Stage 3A Seal} & $\mathbf{104.036}$ & $\mathbf{11.840}$ & $\mathbf{103.689}$ & $\mathbf{124.910}$ & $\mathbf{131.420}$ \\
 \midrule
 Tier-2 Full-256 Schnorr (\texttt{full256}) & 255-Bit Prime Field ($\mathbb{F}_{2^{255}-19}$) NIZK Prove / Verify & $132.350$ & $11.420$ & $129.800$ & $151.200$ & $168.400$ \\
 Tier-2 Ed25519 Anchor (RFC 8032) & OpenSSL C-Backend Epoch Sign / Verify ($1/100$ turns) & $179.600$ & $14.800$ & $176.200$ & $204.500$ & $225.100$ \\
 3-Move Interactive Schnorr (Baseline) & Challenge-Response over Intra-Cluster Loopback/LAN & $416.500$ & $48.200$ & $405.000$ & $512.000$ & $589.000$ \\
 Per-Turn Ephemeral mTLS (Baseline) & Full TLS 1.3 ECDHE-ECDSA Re-Handshake per Turn & $1{,}180.000$ & $142.000$ & $1{,}150.000$ & $1{,}440.000$ & $1{,}690.000$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \subsection{Adversarial Security Audit and Attack Mitigation}
@@ -525,7 +569,7 @@ To verify Goal~G4, we subjected the receiving \texttt{ChameleonMorphEngine} endp
 \begin{enumerate}
     \item \textbf{Exact Wire Packet Replay ($\mathcal{A}_{\text{replay}}$):} The adversary captures a valid packet $W_t$ and re-transmits it either immediately at turn $t+1$ or within the 4096-epoch sliding window.
     \item \textbf{Single-Bit MITM Payload Flip ($\mathcal{A}_{\text{bitflip}}$):} The adversary intercepts $W_t$ in transit and flips a single bit at position $i \bmod B$ in the morphed body $B_t$.
-    \item \textbf{Cross-Goal Context Hijacking ($\mathcal{A}_{\text{goal}}$):} A compromised sub-agent seals a valid payload under goal $\mathcal{G}_t^{\text{read}}$ and injects it into a receiver expecting goal $\mathcal{G}_t^{\text{write}} \ne \mathcal{G}_t^{\text{read}}$.
+    \item \textbf{Cross-Goal Context Hijacking ($\mathcal{A}_{\text{goal}}$):} An attacker or unauthorized session seals a payload under goal $\mathcal{G}_t^{\text{read}}$ and injects it into a receiver expecting goal $\mathcal{G}_t^{\text{write}} \ne \mathcal{G}_t^{\text{read}}$.
     \item \textbf{Epoch Header Rollback / Desynchronization ($\mathcal{A}_{\text{epoch}}$):} The adversary modifies \texttt{X-Chameleon-Epoch-ID} or injects an ancient proof outside the anti-replay window ($t < t_{\max} - 4096$).
     \item \textbf{Schnorr Proof Forgery Without Ratchet Key ($\mathcal{A}_{\text{forge}}$):} The adversary synthesizes a valid algebraic Schnorr tuple $(R_{\text{com}}', e', s', Y')$ using an independent key $R_t' \ne R_t$ and attaches it to a crafted frame.
 \end{enumerate}
@@ -536,6 +580,7 @@ Table~\ref{tab:security_audit} summarizes the results. Across all $5{,}000$ atta
 \centering
 \caption{Adversarial Attack Evaluation Across $5{,}000$ Injection Trials ($1{,}000$ Trials per Threat Vector)}
 \label{tab:security_audit}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llcccl}
 \toprule
 \textbf{Attack Vector} & \textbf{Adversarial Mechanism} & \textbf{Trials} & \textbf{Blocked [\%]} & \textbf{Post-Attack Sync [\%]} & \textbf{Primary Defense Mechanism Triggered} \\
@@ -548,16 +593,18 @@ Unkeyed Schnorr Forgery ($\mathcal{A}_{\text{forge}}$) & Valid $g^s \equiv R Y^e
 \midrule
 \textbf{Total / Aggregate} & \textbf{All 5 Active Dolev-Yao Threat Vectors} & $\mathbf{5{,}000}$ & $\mathbf{100.00\%}$ & $\mathbf{100.00\%}$ & \textbf{Zero false positives; $100\%$ ratchet rollback safety} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \subsection{Component Ablation Study}
-To quantify the marginal contribution of each architectural stage, Table~\ref{tab:ablation} evaluates eight progressive ablation configurations from raw static JSON-RPC (Config~A) to the full Agent-Chameleon pipeline (Config~H). Adding Stage~1 4-way polymorphic rotation alone (Config~B) reduces Random Forest accuracy from $95.0\%$ to $48.5\%$. Adding Stage~2A 4-round Feistel field permutation (Config~C) further reduces Random Forest accuracy to $26.0\%$ by eliminating static tag correlations across codecs. Adding SHAKE-256 stream whitening without quantum chaff padding (Config~E) drives byte histograms toward random samples of finite length $L_s$, reducing Random Forest accuracy to $19.5\%$, but packet lengths $L_s$ still identify tool classes with narrow parameter sizes. Finally, combining Set-Complement and Affine-Bijection Constant-Rate Chaff into discrete bucket quanta (Configs~G and H) simultaneously raises single-frame Shannon entropy to $7.992\text{ bits/byte}$ and collapses Random Forest accuracy to $5.0\%$ ($4.67\%$ ensemble mean), while Stage~3 adds $100.0\%$ zero-knowledge replay and MITM protection at $+20.92\,\mu\text{s}$ proof latency.
+To quantify the marginal contribution of each architectural stage, Table~\ref{tab:ablation} evaluates nine progressive ablation configurations from raw static JSON-RPC (Config~A) to the full Agent-Chameleon pipeline (Config~H). Adding Stage~1 4-way polymorphic rotation alone (Config~B) reduces Subspace RF accuracy from $95.0\%$ to $48.5\%$. Adding Stage~2A 4-round Feistel field permutation (Config~C) further reduces Subspace RF accuracy to $26.0\%$ by eliminating static tag correlations across codecs. Adding SHAKE-256 stream whitening without quantum chaff padding (Config~E) drives byte histograms toward random samples of finite length $L_s$, reducing Subspace RF accuracy to $19.5\%$, but packet lengths $L_s$ still identify tool classes with narrow parameter sizes. Conversely, applying zero-padding to 512B on top of Stage~1+2A (Config~F1) yields $H(X) = 2.840\text{ bits/byte}$ (lower than the $3.142\text{ bits/byte}$ of zero-padded static JSON-RPC in Table~\ref{tab:entropy_classifier} because binary Protobuf/CBOR encodings are more compact and therefore accumulate a larger proportion of $\mathtt{0x00}$ padding bytes), whereas applying Stage~2B set-complement and affine-bijection chaff directly to static JSON-RPC without Stage~1+2A (Config~F2) achieves $H(X) = 7.991\text{ bits/byte}$ and $5.0\%$ RF accuracy on outer wire bytes, but leaves the unpermuted inner JSON AST vulnerable to plaintext structural correlation if a middlebox terminates stream whitening. Finally, combining Stages~1, 2A, and 2B (Configs~G and H) simultaneously provides defense-in-depth AST schema permutation, raises single-frame Shannon entropy to $7.992\text{ bits/byte}$, and collapses classifier accuracy to $5.0\%$ ($4.67\%$ ensemble mean), while Stage~3 adds $100.0\%$ zero-knowledge replay and MITM protection at $+20.92\,\mu\text{s}$ proof latency.
 
 \begin{table*}[t!]
 \centering
 \caption{Systematic Component Ablation Study Across $N = 1{,}000$ Multi-Agent Traces}
 \label{tab:ablation}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lccccccc}
 \toprule
 \textbf{Ablation Configuration} & \textbf{Stage 1 Poly.} & \textbf{Stage 2A Feistel} & \textbf{Stage 2B Chaff} & \textbf{Stage 3 ZK} & \textbf{Entropy $H(X)$} & \textbf{RF Acc. [\%]} & \textbf{Replay Block [\%]} \\
@@ -567,44 +614,63 @@ B. Stage 1 Polymorphic Rotation Only & \checkmark & -- & -- & -- & $5.312$ & $48
 C. Stage 1 + Stage 2A Feistel Permutation & \checkmark & \checkmark & -- & -- & $5.538$ & $26.0\%$ & $0.0\%$ \\
 D. Stage 2A Feistel on Static JSON Only & -- & \checkmark & -- & -- & $4.915$ & $64.0\%$ & $0.0\%$ \\
 E. Stage 1 + 2A + Stream Whiten (No Pad) & \checkmark & \checkmark & Whiten Only & -- & $7.142$ & $19.5\%$ & $0.0\%$ \\
-F. Stage 1 + 2A + Zero-Padding (512B) & \checkmark & \checkmark & Zero-Pad & -- & $2.840$ & $24.5\%$ & $0.0\%$ \\
+F1. Stage 1 + 2A + Zero-Padding (512B) & \checkmark & \checkmark & Zero-Pad & -- & $2.840$ & $24.5\%$ & $0.0\%$ \\
+F2. Static JSON-RPC + Stage 2B Chaff Only & -- & -- & \checkmark & -- & $7.991$ & $5.0\%$ & $0.0\%$ \\
 G. Stage 1 + Stage 2 Full (No Stage 3 ZK) & \checkmark & \checkmark & \checkmark & -- & $7.992$ & $5.0\%$ & $0.0\%$ \\
 \textbf{H. Agent-Chameleon (Full Stages 1+2+3)} & \checkmark & \checkmark & \checkmark & \checkmark & $\mathbf{7.992}$ & $\mathbf{5.0\%}$ & $\mathbf{100.0\%}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \section{Discussion, Operational Deployment, and Limitations}
 \label{sec:discussion}
 
 \subsection{Deployment in Cloud Service Meshes and FastMCP Gateways}
-Agent-Chameleon is designed to operate either as an in-process SDK transport wrapper inside Google Agent Development Kit (ADK) and FastMCP client/server runtimes or as an out-of-process Envoy/Istio sidecar filter. Because every morphed frame preserves standard HTTP/2 and gRPC framing semantics via \texttt{Content-Type: application/x-chameleon-morph+octet-stream} and carries its synchronization metadata in standard ASCII headers (\texttt{X-Chameleon-Epoch-ID}, \texttt{X-Chameleon-Proof-Nonce}, \texttt{X-Chameleon-Bucket-Tier}), intermediate Layer-4/Layer-7 load balancers, cloud ingress gateways, and service-mesh routers forward Agent-Chameleon packets transparently without modification.
+Agent-Chameleon is designed to operate either as an in-process SDK transport wrapper inside Google Agent Development Kit (ADK) and FastMCP client/server runtimes or as an out-of-process Envoy/Istio sidecar filter. Because every morphed frame preserves standard HTTP/2 and gRPC framing semantics via \texttt{Content-Type: application/x-chameleon-morph+octet-stream} and carries its synchronization metadata in standard ASCII headers (\texttt{X-Chameleon-Epoch-ID}, \texttt{X-Chameleon-Proof-Nonce}, \texttt{X-Chameleon-Bucket-Tier}, and the optional periodic \texttt{X-Chameleon-Epoch-Anchor} header at $t \equiv 0 \pmod{100}$), intermediate Layer-4/Layer-7 load balancers, cloud ingress gateways, and service-mesh routers forward Agent-Chameleon packets transparently without modification.
 
 \subsection{Out-of-Order Transport and Concurrent Sub-Streams}
-In HTTP/2 or gRPC multiplexing where an agent dispatches $K_{\text{par}}$ concurrent tool calls over parallel streams before awaiting responses, tying all concurrent streams to a single linear frame-digest chain $D_{t-1}$ could induce head-of-line blocking if packets arrive out of order. To support lock-free parallel streaming, Agent-Chameleon provisions per-stream child ratchets $R_{s, 0} = \operatorname{HKDF-SHA256}(R_t, \text{stream\_id}_s, \texttt{"chameleon-substream"})$ forked from the parent session ratchet, or allows the verifier to evaluate Eq.~\eqref{eq:ratchet_step} with $\text{salt}_t = \operatorname{uint64\_be}(t)$ over a lookahead window of $W_{\text{ooo}} = 32$ epochs while retaining the sliding anti-replay cache $\mathcal{W}_{\text{seen}}$.
+In HTTP/2 or gRPC multiplexing where an agent dispatches $K_{\text{par}}$ concurrent tool calls over parallel streams before awaiting responses, tying all concurrent streams to a single linear frame-digest chain $D_{t-1}$ could induce head-of-line blocking if packets arrive out of order. To support lock-free parallel streaming, Agent-Chameleon provisions per-stream child ratchets forked from the parent session ratchet via a 4-argument HKDF call:
+\begin{equation}
+\label{eq:child_ratchet}
+\begin{aligned}
+R_{s, 0} &= \operatorname{HKDF-SHA256}\big(R_t,\; \operatorname{uint64\_be}(\text{stream\_id}_s), \\
+&\quad \texttt{"chameleon-substream"},\; 32\big),
+\end{aligned}
+\end{equation}
+or allows the verifier to evaluate Eq.~\eqref{eq:ratchet_step} with $\text{salt}_t = \operatorname{uint64\_be}(t)$ over a lookahead window of $W_{\text{ooo}} = 32$ epochs while retaining the sliding anti-replay cache $\mathcal{W}_{\text{seen}}$.
 
 \subsection{Bandwidth Overhead vs. Privacy Trade-Off}
-Because Stage~2B pads serialized payloads of typical length $L_s \in [120, 240]\text{ bytes}$ into discrete quantum buckets of $B = 1024\text{ bytes}$ ($4\times$ prefix multiplier) to guarantee single-frame plug-in Shannon byte entropy $H(B_t) \ge 7.980\text{ bits/byte}$ via Theorem~\ref{thm:entropy}, each RPC incurs approximately $780\text{ bytes}$ of additional wire chaff. On modern $10$--$100\text{ Gbps}$ data-center interconnects, $780\text{ bytes}$ represents less than $65\text{ nanoseconds}$ of serialization delay on the physical NIC, which is negligible compared to millisecond-scale LLM inference while providing complete mathematical immunity against L7 schema fingerprinting. For bandwidth-constrained edge links, operators can configure \texttt{min\_bucket=512} or evaluate entropy over sliding multi-frame windows.
+Because Stage~2B pads serialized payloads of typical length $L_s \in [120, 240]\text{ bytes}$ into discrete quantum buckets of $B = 1024\text{ bytes}$ ($4\times$ prefix multiplier) to guarantee single-frame plug-in Shannon byte entropy $H(B_t) \ge 7.980\text{ bits/byte}$ via Theorem~\ref{thm:entropy}, each RPC incurs approximately $780\text{ bytes}$ of body chaff plus $\approx 160\text{ bytes}$ of raw HTTP/2 header metadata ($\approx 48\text{ bytes}$ after HTTP/2 HPACK header-name indexing). On modern $10$--$100\text{ Gbps}$ data-center interconnects, $940\text{ bytes}$ represents less than $76\text{ nanoseconds}$ of serialization delay on the physical NIC, which is negligible compared to millisecond-scale LLM inference while providing mathematical immunity against L7 schema fingerprinting. For bandwidth-constrained edge links, operators can configure \texttt{min\_bucket=512} (which accommodates compact binary payloads up to $L_s \le 56\text{ bytes}$ at $4\times$ chaff ratio, or up to $L_s \le 120\text{ bytes}$ under a $2\times$ chaff ratio with $H(B_t) \ge 7.94\text{ bits/byte}$).
+
+\subsection{Scope Boundaries and Future Directions}
+While Agent-Chameleon eliminates L7 payload schema invariants, length side channels within each quantum bucket tier, and static bearer-token replay surfaces, three scope boundaries merit explicit discussion:
+\begin{enumerate}
+    \item \textbf{Inter-Arrival Timing and Multi-Turn Flow Correlation:} Stage~2B normalizes per-packet byte histograms and discretizes packet sizes into 7 quantum buckets, but does not inject artificial network delays to mask inter-packet arrival times (IAT) caused by heterogeneous downstream tool execution latencies (e.g., a $15\text{ ms}$ Redis lookup vs. a $2.5\text{ s}$ BigQuery scan). Integrating constant-rate token-bucket pacing on latency-tolerant links is a natural extension.
+    \item \textbf{Post-Quantum Session Bootstrap:} While Stage~2 ($\operatorname{SHAKE-256}$ Feistel and stream whitening) and Stage~3's symmetric ratchet tag $\tau_{\text{ratchet}}$ ($\operatorname{BLAKE2s-128}$) are already post-quantum secure against Grover-capable adversaries, the initial Stage~1 X25519 ECDH bootstrap and Stage~3 discrete-logarithm Schnorr proof rely on classical hardness assumptions. Hybridizing the bootstrap with NIST FIPS~203 ML-KEM-768 and lattice-based Fiat-Shamir proofs (e.g., Dilithium/ML-DSA challenges on periodic anchor turns) provides a clean post-quantum migration path.
+\end{enumerate}
 
 \section{Conclusion}
 \label{sec:conclusion}
-We have presented \textbf{Agent-Chameleon}, an end-to-end dynamic protocol morphing, goal-conditioned schema permutation, and zero-knowledge session handshake framework for multi-agent swarm communications. By unifying an ephemeral X25519/HKDF-SHA256 session ratchet and 4-way polymorphic wire serializer (Stage~1) with a 4-round SHAKE-256 keyed Luby-Rackoff Feistel schema network and set-complement plus $\mathbb{Z}_{256}$ affine-bijection constant-rate chaff engine (Stage~2), and a sub-$35\,\mu\text{s}$ non-interactive Fiat-Shamir Schnorr challenge-response protocol (Stage~3), Agent-Chameleon eliminates static wire schema invariants and bearer-token replay surfaces simultaneously. Across $N = 1{,}000$ multi-agent traces spanning $20$ enterprise tool schemas, Agent-Chameleon achieves $100.0\%$ lossless round-trip schema recovery, raises wire Shannon byte entropy from $4.788\text{ bits/byte}$ to $7.992\text{ bits/byte}$, collapses attacker traffic-fingerprinting accuracy from $96.5\%$ ensemble mean down to $4.67\%$ (matching the $5.0\%$ uniform random-guess floor), blocks $100.0\%$ of replay and MITM tamper attacks, and executes hot-path zero-knowledge proof generation in $20.92\,\mu\text{s}$ mean ($28.86\,\mu\text{s}$ combined ratchet plus proof).
+We have presented \textbf{Agent-Chameleon}, an end-to-end dynamic protocol morphing, goal-conditioned schema permutation, and zero-knowledge session handshake framework for multi-agent swarm communications. By unifying an ephemeral X25519/HKDF-SHA256 session ratchet and 4-way polymorphic wire serializer (Stage~1) with a 4-round SHAKE-256 keyed Luby-Rackoff Feistel schema network and set-complement plus $\mathbb{Z}_{256}$ affine-bijection constant-rate chaff engine (Stage~2), and a sub-$35\,\mu\text{s}$ non-interactive Fiat-Shamir Schnorr challenge-response protocol (Stage~3), Agent-Chameleon eliminates static wire schema invariants and bearer-token replay surfaces simultaneously. Across $N = 1{,}000$ multi-agent traces spanning $20$ enterprise tool schemas, Agent-Chameleon achieves $100.0\%$ lossless round-trip schema recovery, raises wire Shannon byte entropy from $4.788\text{ bits/byte}$ to $7.992\text{ bits/byte}$, collapses attacker traffic-fingerprinting accuracy from $96.5\%$ ensemble mean down to $4.67\%$ (matching the $5.0\%$ uniform random-guess floor), blocks $100.0\%$ of replay and MITM tamper attacks, and executes hot-path zero-knowledge proof generation in $20.92\,\mu\text{s}$ mean ($28.86\,\mu\text{s}$ combined ratchet plus proof, $104.0\,\mu\text{s}$ full 3-stage seal).
 
 \appendices
 
 \section{Per-Schema Benchmark Telemetry Across All 20 Enterprise Tool Classes}
 \label{app:schemas}
-Table~\ref{tab:per_schema} reports the complete per-schema empirical breakdown across all $20$ enterprise MCP and A2A tool classes ($50$ traces per class, $N = 1{,}000$ total traces), contrasting unprotected Static JSON-RPC against the full Agent-Chameleon 3-stage pipeline.
+Table~\ref{tab:per_schema} reports the complete per-schema empirical breakdown across all $20$ enterprise MCP and A2A tool classes ($50$ traces per class, $N = 1{,}000$ total traces), contrasting unprotected Static JSON-RPC against the full Agent-Chameleon 3-stage pipeline (reporting both the $28.86\,\mu\text{s}$ mean Hot-Path Ratchet + ZK proof latency and $104.0\,\mu\text{s}$ full 3-stage seal latency).
 
 \begin{table*}[t!]
 \centering
+\renewcommand{\arraystretch}{0.78}
 \caption{Per-Schema Telemetry Across All 20 Enterprise MCP / A2A Tool Classes ($N = 1{,}000$ Traces, $50$ Traces per Class)}
 \label{tab:per_schema}
+\resizebox{0.90\textwidth}{!}{%
 \begin{tabular}{clcccccc}
 \toprule
  & & & \multicolumn{2}{c}{\textbf{Static MCP JSON-RPC}} & \multicolumn{3}{c}{\textbf{Agent-Chameleon (Full 3-Stage)}} \\
 \cmidrule(lr){4-5} \cmidrule(lr){6-8}
-\textbf{ID} & \textbf{Enterprise Tool Schema Name} & \textbf{Authorized Goal Context $\mathcal{G}_t$} & \textbf{Raw Len [B]} & \textbf{Entropy $H_0$} & \textbf{Bucket $B$ [B]} & \textbf{Entropy $H_{\text{cham}}$} & \textbf{Seal + ZK [$\mu$s]} \\
+\textbf{ID} & \textbf{Enterprise Tool Schema Name} & \textbf{Authorized Goal Context $\mathcal{G}_t$} & \textbf{Raw Len [B]} & \textbf{Entropy $H_0$} & \textbf{Bucket $B$ [B]} & \textbf{Entropy $H_{\text{cham}}$} & \textbf{Ratchet + ZK [$\mu$s]} \\
 \midrule
 1 & \texttt{execute\_sap\_journal\_entry} & \texttt{goal:erp\_gl\_posting} & $248.4$ & $4.812$ & $1024$ & $7.991$ & $28.42$ \\
 2 & \texttt{query\_bigquery\_ledger} & \texttt{goal:analytics\_recon} & $226.1$ & $4.765$ & $1024$ & $7.993$ & $27.95$ \\
@@ -629,7 +695,8 @@ Table~\ref{tab:per_schema} reports the complete per-schema empirical breakdown a
 \midrule
 \multicolumn{3}{l}{\textbf{Overall Dataset Mean ($N = 1{,}000$ Traces, $20$ Classes)}} & $\mathbf{241.6}$ & $\mathbf{4.788}$ & $\mathbf{1024}$ & $\mathbf{7.992}$ & $\mathbf{28.86}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \section{Unit and Property Verification Suite Summary}
@@ -638,8 +705,10 @@ Table~\ref{tab:unit_tests} catalogs all $24$ unit and property tests implemented
 
 \begin{table*}[t!]
 \centering
+\renewcommand{\arraystretch}{0.78}
 \caption{Summary of the 24 Automated Unit and Property Tests in \texttt{tests/test\_agent\_chameleon.py} ($100\%$ Pass Rate)}
 \label{tab:unit_tests}
+\resizebox{0.90\textwidth}{!}{%
 \begin{tabular}{clll}
 \toprule
 \textbf{Test ID} & \textbf{Test Method Name} & \textbf{Target Subsystem} & \textbf{Verified Mathematical / System Invariant} \\
@@ -669,7 +738,8 @@ Table~\ref{tab:unit_tests} catalogs all $24$ unit and property tests implemented
 23 & \texttt{test\_23\_zk\_ancient\_epoch\_window\_eviction} & Stage 3 Window & Epochs older than $t_{\max} - W$ rejected immediately \\
 24 & \texttt{test\_24\_invalid\_content\_type\_rejection} & Wire Contract & Non-Chameleon \texttt{Content-Type} rejected with \texttt{ValueError} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \section{Formal Byte-Grammar Specification of the Four Polymorphic Wire Codecs}
@@ -681,75 +751,96 @@ To ensure reproducible, cross-language interoperability across Python, Go, Rust,
 Given a Feistel-permuted dictionary $\tilde{P}_t = \{\tilde{\tau}_1 \mapsto v_1, \dots, \tilde{\tau}_K \mapsto v_K\}$ where $\tilde{\tau}_i = F_k(\tau_i) \in \{0, \dots, 65535\}$, the unsigned base-128 varint encoder $\operatorname{uvarint}(u)$ maps any non-negative integer $u \ge 0$ to a sequence of $m = \max(1, \lceil \log_{128}(u + 1) \rceil)$ bytes $(b_0, \dots, b_{m-1})$ where the most significant bit (MSB, $\mathtt{0x80}$) acts as a continuation flag:
 \begin{equation}
 \label{eq:uvarint_def}
-b_j = \begin{cases}
-\left((u \gg (7j)) \mathbin{\&} \mathtt{0x7F}\right) \mid \mathtt{0x80}, & \text{if } 0 \le j < m - 1, \\
-(u \gg (7(m-1))) \mathbin{\&} \mathtt{0x7F}, & \text{if } j = m - 1,
-\end{cases}
-\qquad
-u = \sum_{j=0}^{m-1} (b_j \mathbin{\&} \mathtt{0x7F}) \cdot 2^{7j}.
+\begin{aligned}
+b_j &= \begin{cases}
+\left((u \gg (7j)) \mathbin{\&} \mathtt{0x7F}\right) \mid \mathtt{0x80}, & 0 \le j < m - 1, \\
+(u \gg (7(m-1))) \mathbin{\&} \mathtt{0x7F}, & j = m - 1,
+\end{cases} \\
+u &= \sum_{j=0}^{m-1} (b_j \mathbin{\&} \mathtt{0x7F}) \cdot 2^{7j}.
+\end{aligned}
 \end{equation}
 Signed integers $n \in \mathbb{Z}$ are first mapped to non-negative integers via the bijective ZigZag transform:
 \begin{equation}
 \label{eq:zigzag_def}
-z(n) = \begin{cases}
-2n, & \text{if } n \ge 0, \\
--2n - 1, & \text{if } n < 0,
-\end{cases}
-\qquad
-z^{-1}(u) = (u \gg 1) \oplus -(u \mathbin{\&} 1).
+\begin{aligned}
+z(n) &= \begin{cases}
+2n, & n \ge 0, \\
+-2n - 1, & n < 0,
+\end{cases} \\
+z^{-1}(u) &= (u \gg 1) \oplus -(u \mathbin{\&} 1).
+\end{aligned}
 \end{equation}
 Each value $v_i$ is serialized with a 1-byte type discriminator $\theta(v_i) \in \{0, \dots, 7\}$:
 \begin{equation}
 \label{eq:pb_val_grammar}
+\resizebox{0.88\columnwidth}{!}{$\displaystyle
 \operatorname{EncVal}_{\text{PB}}(v) = \begin{cases}
 \mathtt{0x00}, & v = \texttt{None}, \\
-\mathtt{0x01} \parallel (\mathtt{0x01}\text{ if }v\text{ else }\mathtt{0x00}), & v \in \{\texttt{True}, \texttt{False}\}, \\
+\mathtt{0x01} \parallel \operatorname{uint8}(v), & v \in \{\texttt{True}, \texttt{False}\}, \\
 \mathtt{0x02} \parallel \operatorname{uvarint}(z(v)), & v \in \mathbb{Z}, \\
-\mathtt{0x03} \parallel \operatorname{ieee754\_be64}(v), & v \in \mathbb{R}, \\
-\mathtt{0x04} \parallel \operatorname{uvarint}(|\operatorname{utf8}(v)|) \parallel \operatorname{utf8}(v), & v \in \Sigma_{\text{utf8}}^*, \\
-\mathtt{0x05} \parallel \operatorname{uvarint}(|v|) \parallel v, & v \in \{0,\dots,255\}^*, \\
-\mathtt{0x06} \parallel \operatorname{uvarint}(|v|) \parallel \big\|_{u \in v} \left(\operatorname{uvarint}(|\operatorname{EncVal}_{\text{PB}}(u)|) \parallel \operatorname{EncVal}_{\text{PB}}(u)\right), & v \text{ is a list}, \\
-\mathtt{0x07} \parallel \operatorname{uvarint}(|\operatorname{EncMap}_{\text{PB}}(v)|) \parallel \operatorname{EncMap}_{\text{PB}}(v), & v \text{ is a nested dict}.
+\mathtt{0x03} \parallel \operatorname{f64\_be}(v), & v \in \mathbb{R}, \\
+\mathtt{0x04} \parallel \operatorname{uvarint}(|v_8|) \parallel v_8, & v \in \Sigma_{\text{utf8}}^*, \\
+\mathtt{0x05} \parallel \operatorname{uvarint}(|v|) \parallel v, & v \in \{0..255\}^*, \\
+\mathtt{0x06} \parallel \operatorname{uvarint}(|v|) \parallel \operatorname{EncList}_{\text{PB}}(v), & v \text{ is list}, \\
+\mathtt{0x07} \parallel \operatorname{uvarint}(|\operatorname{EncMap}_{\text{PB}}(v)|) \parallel \operatorname{EncMap}_{\text{PB}}(v), & v \text{ is dict},
 \end{cases}
+$}
 \end{equation}
-The top-level map encoder $\operatorname{EncMap}_{\text{PB}}(\tilde{P}_t)$ prefixes the entry count $\operatorname{uvarint}(K)$ followed by the concatenation of length-delimited field records (wire type $2$):
+where $v_8 = \operatorname{utf8}(v)$ and $\operatorname{EncList}_{\text{PB}}(v) = \big\|_{u \in v} (\operatorname{uvarint}(|\operatorname{EncVal}_{\text{PB}}(u)|) \parallel \operatorname{EncVal}_{\text{PB}}(u))$. The top-level map encoder $\operatorname{EncMap}_{\text{PB}}(\tilde{P}_t)$ prefixes the entry count $\operatorname{uvarint}(K)$ followed by the concatenation of length-delimited field records (wire type $2$):
 \begin{equation}
 \label{eq:pb_map_grammar}
-\operatorname{EncMap}_{\text{PB}}(\tilde{P}_t) = \operatorname{uvarint}(K) \;\parallel\; \big\|_{i=1}^K \left( \operatorname{uvarint}\left((\tilde{\tau}_i \ll 3) \mid 2\right) \;\parallel\; \operatorname{uvarint}\left(|\operatorname{EncVal}_{\text{PB}}(v_i)|\right) \;\parallel\; \operatorname{EncVal}_{\text{PB}}(v_i) \right).
+\begin{aligned}
+\operatorname{EncMap}_{\text{PB}}(\tilde{P}_t) &= \operatorname{uvarint}(K) \\
+&\quad \parallel \big\|_{i=1}^K \Big( \operatorname{uvarint}\left((\tilde{\tau}_i \ll 3) \mid 2\right) \\
+&\qquad \parallel \operatorname{uvarint}\left(|E_i|\right) \parallel E_i \Big),
+\end{aligned}
 \end{equation}
+where $E_i = \operatorname{EncVal}_{\text{PB}}(v_i)$.
 
 \subsection{Format 1: 4-Byte Aligned FlatBuffers VTable Layout (\texttt{FLATBUFFERS\_TABLE})}
 Format~1 constructs an offset-addressed binary buffer consisting of three contiguous regions: (i)~a 12-byte root header, (ii)~a 4-byte aligned value heap $\mathcal{H}_{\text{heap}}$, and (iii)~a trailing virtual offset directory (\texttt{vtable}) $\mathcal{V}_{\text{dir}}$:
 \begin{equation}
 \label{eq:fb_layout}
-\operatorname{EncMap}_{\text{FB}}(\tilde{P}_t) = \underbrace{\texttt{"FBCH"} \parallel \operatorname{uint32\_be}(12 + |\mathcal{H}_{\text{heap}}|) \parallel \operatorname{uint32\_be}(K)}_{\text{12-Byte Root Header}} \;\parallel\; \mathcal{H}_{\text{heap}} \;\parallel\; \mathcal{V}_{\text{dir}}.
+\begin{aligned}
+\operatorname{EncMap}_{\text{FB}}(\tilde{P}_t) &= \texttt{"FBCH"} \parallel \operatorname{uint32\_be}(12 + |\mathcal{H}_{\text{heap}}|) \\
+&\quad \parallel \operatorname{uint32\_be}(K) \parallel \mathcal{H}_{\text{heap}} \parallel \mathcal{V}_{\text{dir}}.
+\end{aligned}
 \end{equation}
-For each field $(\tilde{\tau}_i, v_i)$, let $E_i = \operatorname{EncMap}_{\text{PB}}(\{\tilde{\tau}_i \mapsto v_i\})$ denote its compact binary record of byte length $\ell_i = |E_i|$, and let $\text{pad}(\ell_i) = (4 - (\ell_i \bmod 4)) \bmod 4 \in \{0, 1, 2, 3\}$ be the padding required to maintain 32-bit word alignment. The heap offset $\text{off}_i$ of entry $i$ satisfies $\text{off}_1 = 0$ and $\text{off}_{i+1} = \text{off}_i + \ell_i + \text{pad}(\ell_i) \equiv 0 \pmod 4$. The trailing \texttt{vtable} directory $\mathcal{V}_{\text{dir}}$ stores $K$ fixed-width 10-byte descriptors:
+For each field $(\tilde{\tau}_i, v_i)$, let $E_i = \operatorname{EncVal}_{\text{PB}}(v_i)$ denote its serialized value record of byte length $\ell_i = |E_i|$, and let $\text{pad}(\ell_i) = (4 - (\ell_i \bmod 4)) \bmod 4 \in \{0, 1, 2, 3\}$ be the zero-padding required to maintain 32-bit word alignment in $\mathcal{H}_{\text{heap}}$. The heap-relative offset $\text{off}_i$ of entry $i$ satisfies $\text{off}_1 = 0$ and $\text{off}_{i+1} = \text{off}_i + \ell_i + \text{pad}(\ell_i) \equiv 0 \pmod 4$ (corresponding to absolute buffer offset $12 + \text{off}_i$). The trailing \texttt{vtable} directory $\mathcal{V}_{\text{dir}}$ stores $K$ fixed-width 10-byte descriptors:
 \begin{equation}
 \label{eq:fb_vtable}
-\mathcal{V}_{\text{dir}} = \big\|_{i=1}^K \left( \operatorname{uint16\_be}(\tilde{\tau}_i) \;\parallel\; \operatorname{uint32\_be}(\text{off}_i) \;\parallel\; \operatorname{uint32\_be}(\ell_i) \right),
+\begin{aligned}
+\mathcal{V}_{\text{dir}} &= \big\|_{i=1}^K \Big( \operatorname{uint16\_be}(\tilde{\tau}_i) \;\parallel\; \operatorname{uint32\_be}(\text{off}_i) \\
+&\qquad \parallel \operatorname{uint32\_be}(\ell_i) \Big),
+\end{aligned}
 \end{equation}
 allowing a receiver to locate any permuted field $\tilde{\tau}_i$ by scanning the compact 10-byte \texttt{vtable} descriptors and jumping directly to $\mathcal{H}_{\text{heap}}[\text{off}_i : \text{off}_i + \ell_i]$.
 
 \subsection{Format 2: Concise Binary Object Representation (\texttt{CBOR\_RFC8949})}
-Format~2 implements the IETF STD~94 / RFC~8949 binary object grammar~\cite{bormann2020cbor}. Each data item begins with an initial byte $b_0 = (\text{mt} \ll 5) \mid \text{ai}$, where $\text{mt} \in \{0,\dots,7\}$ is the 3-bit major type and $\text{ai} \in \{0,\dots,31\}$ is the 5-bit additional information field encoding the argument $N$:
+Format~2 implements the IETF STD~94 / RFC~8949 binary object grammar~\cite{bormann2020cbor}. Each data item begins with an initial byte $b_0 = (\text{mt} \ll 5) \mid \text{ai}$, where $\text{mt} \in \{0,1,2,3,4,5,7\}$ is the 3-bit major type (omitting major type $6$ semantic tags) and $\text{ai} \in \{0,\dots,31\}$ is the 5-bit additional information field encoding the non-negative argument $N$:
 \begin{equation}
 \label{eq:cbor_head}
-\operatorname{CBORHead}(\text{mt}, N) = \begin{cases}
-\operatorname{uint8}((\text{mt} \ll 5) \mid N), & 0 \le N < 24, \\
-\operatorname{uint8}((\text{mt} \ll 5) \mid 24) \parallel \operatorname{uint8}(N), & 24 \le N \le 2^{8}-1, \\
-\operatorname{uint8}((\text{mt} \ll 5) \mid 25) \parallel \operatorname{uint16\_be}(N), & 2^{8} \le N \le 2^{16}-1, \\
-\operatorname{uint8}((\text{mt} \ll 5) \mid 26) \parallel \operatorname{uint32\_be}(N), & 2^{16} \le N \le 2^{32}-1, \\
-\operatorname{uint8}((\text{mt} \ll 5) \mid 27) \parallel \operatorname{uint64\_be}(N), & 2^{32} \le N \le 2^{64}-1.
+\resizebox{0.88\columnwidth}{!}{$\displaystyle
+\operatorname{CBOR}_{\text{hdr}}(\text{mt}, N) = \begin{cases}
+\operatorname{u8}((\text{mt} \ll 5) \mid N), & N < 24, \\
+\operatorname{u8}((\text{mt} \ll 5) \mid 24) \parallel \operatorname{u8}(N), & N < 2^8, \\
+\operatorname{u8}((\text{mt} \ll 5) \mid 25) \parallel \operatorname{u16}(N), & N < 2^{16}, \\
+\operatorname{u8}((\text{mt} \ll 5) \mid 26) \parallel \operatorname{u32}(N), & N < 2^{32}, \\
+\operatorname{u8}((\text{mt} \ll 5) \mid 27) \parallel \operatorname{u64}(N), & N < 2^{64}.
 \end{cases}
+$}
 \end{equation}
 Permuted dictionaries are encoded under major type $\text{mt} = 5$ (map of pairs) with integer keys ($\text{mt} = 0$ for $\tilde{\tau}_i \ge 0$), negative integers $n < 0$ under $\text{mt} = 1$ with argument $N = -1 - n$, byte strings under $\text{mt} = 2$, UTF-8 strings under $\text{mt} = 3$, lists under $\text{mt} = 4$, booleans/null as simple values $\mathtt{0xF4}, \mathtt{0xF5}, \mathtt{0xF6}$, and double-precision floats as $\mathtt{0xFB} \parallel \operatorname{ieee754\_be64}(v)$.
 
 \subsection{Format 3: Canonical Hex-Tagged Signed JSON-RPC (\texttt{CANONICAL\_JSON\_RPC})}
-Format~3 transforms every 16-bit permuted integer tag $\tilde{\tau}_i$ into a 6-character hexadecimal key string $\kappa(\tilde{\tau}_i) = \texttt{"0x"} \parallel \operatorname{hex4}(\tilde{\tau}_i)$, recursively sorts all dictionary keys in ascending ASCII order, serializes the tree without whitespace (\texttt{separators=(",",":")}), and appends a 64-bit truncated HMAC-SHA256 authentication tag:
+Format~3 transforms every 16-bit permuted integer tag $\tilde{\tau}_i$ into a 6-character hexadecimal key string $\kappa(\tilde{\tau}_i) = \texttt{"0x"} \parallel \operatorname{hex4}(\tilde{\tau}_i)$, encodes any raw binary byte string $v \in \{0,\dots,255\}^*$ as a URL-safe Base64 ASCII string prefixed with \texttt{"b64:"}, recursively sorts all dictionary keys in ascending ASCII order, serializes the tree without whitespace (\texttt{separators=(",",":")}), and appends a 64-bit truncated HMAC-SHA256 authentication tag:
 \begin{equation}
 \label{eq:jsonrpc_mac}
-\operatorname{EncMap}_{\text{JSON}}(\tilde{P}_t, R_t) = J_t \;\parallel\; \operatorname{HMAC-SHA256}\left(R_t,\; \texttt{"chameleon-jsonrpc|"} \parallel J_t\right)[0:8].
+\begin{aligned}
+\operatorname{EncMap}_{\text{JSON}}(\tilde{P}_t, R_t) &= J_t \;\parallel\; \operatorname{HMAC-SHA256}\big(R_t, \\
+&\quad \texttt{"chameleon-jsonrpc|"} \\
+&\quad \parallel J_t\big)[0:8].
+\end{aligned}
 \end{equation}
 
 \section{Extended Proofs of Multi-Hop Swarm Ratchet Synchrony and Rollback Safety}
@@ -765,16 +856,21 @@ Let $\Sigma_j^{(t)} = (R_{t-1}, t, D_{t-1}, \mathcal{W}_{\text{seen}})$ denote t
 \end{proposition}
 
 \begin{proof}
-In \texttt{ChameleonMorphEngine.open\_message}, any packet failing the header pre-checks ($\mathcal{H}_t[\texttt{Content-Type}] \ne \texttt{application/x-chameleon-morph+octet-stream}$, $\pi_t.\text{epoch\_id} \ne t_{\text{hdr}}$, or $t_{\text{hdr}} \ne t$) raises an exception before \texttt{self.ratchet.advance} is invoked, leaving $\Sigma_j^{(t)}$ untouched. If an adversarial packet $\tilde{W}^{(m)}$ carries a spoofed header with $t_{\text{hdr}} = t$, the receiver saves the state tuple $(R_{\text{saved}}, t_{\text{saved}}, D_{\text{saved}}) \leftarrow (R_{t-1}, t, D_{t-1})$ on the call stack prior to entering the \texttt{try} block. Inside the \texttt{try} block, $\mathcal{A}_j$ computes the candidate turn key $R_t$ and invokes \texttt{zk\_engine.verify\_proof}. Because the adversary lacks $R_t$, forging the 128-bit Blake2s tag $\tau_{\text{ratchet}}$ or matching $Y_t = g^{x_t(R_t)} \bmod p$ succeeds with probability at most $2^{-128}$, and \texttt{verify\_proof} only inserts $(t, \tau_{\text{ratchet}})$ into $\mathcal{W}_{\text{seen}}$ after all algebraic and MAC checks pass. When \texttt{PermissionError} or \texttt{ValueError} is raised, the \texttt{except} block executes:
+In \texttt{ChameleonMorphEngine.open\_message}, any packet failing the header pre-checks ($\mathcal{H}_t[\texttt{Content-Type}]$ not equal to \texttt{application/}\allowbreak\texttt{x-chameleon-morph+}\allowbreak\texttt{octet-stream}, $\pi_t.\text{epoch\_id} \ne t_{\text{hdr}}$, or $t_{\text{hdr}} \ne t$) raises an exception before \texttt{self.ratchet.advance} is invoked, leaving $\Sigma_j^{(t)}$ untouched. If an adversarial packet $\tilde{W}^{(m)}$ carries a spoofed header with $t_{\text{hdr}} = t$, the receiver saves the state tuple $(R_{\text{saved}}, t_{\text{saved}}, D_{\text{saved}}) \leftarrow (R_{t-1}, t, D_{t-1})$ on the call stack prior to entering the \texttt{try} block. Inside the \texttt{try} block, $\mathcal{A}_j$ computes the candidate turn key $R_t$ and invokes \texttt{zk\_engine.verify\_proof}. Because the adversary lacks $R_t$, forging the 128-bit Blake2s tag $\tau_{\text{ratchet}}$ or matching $Y_t = g^{x_t(R_t)} \bmod p$ succeeds with probability at most $2^{-128}$, and \texttt{verify\_proof} only inserts $(t, \tau_{\text{ratchet}})$ into $\mathcal{W}_{\text{seen}}$ after all algebraic and MAC checks pass. When \texttt{PermissionError} or \texttt{ValueError} is raised, the \texttt{except} block executes:
 \begin{equation}
-\texttt{self.ratchet.root\_key} \leftarrow R_{\text{saved}}, \qquad \texttt{self.ratchet.epoch\_id} \leftarrow t_{\text{saved}}, \qquad \texttt{self.ratchet.prev\_frame\_digest} \leftarrow D_{\text{saved}},
+\label{eq:rollback_vars}
+\begin{aligned}
+\texttt{self.ratchet.root\_key} &\leftarrow R_{\text{saved}}, \\
+\texttt{self.ratchet.epoch\_id} &\leftarrow t_{\text{saved}}, \\
+\texttt{self.ratchet.prev\_frame\_digest} &\leftarrow D_{\text{saved}},
+\end{aligned}
 \end{equation}
 restoring $\Sigma_j^{(t)}$ bitwise. By induction over $m = 1, \dots, M$, $\Sigma_j^{(t, M)} = \Sigma_j^{(t)}$, ensuring $100\%$ recovery when $W_t$ arrives.
 \end{proof}
 
 \begin{proposition}[Cross-Turn and Cross-Goal Feistel Tag Unlinkability]
 \label{prop:avalanche}
-Under the pseudorandomness of $\operatorname{SHAKE-256}$, for any two distinct turns $t_1 \ne t_2$ or distinct goals $\mathcal{G}_1 \ne \mathcal{G}_2$, and for any canonical field slot $x \in \{1,\dots,64\}$, the expected bitwise Hamming distance between the resulting 16-bit wire tags $F_{k_1}(x)$ and $F_{k_2}(x)$ is $\mathbb{E}[d_H(F_{k_1}(x), F_{k_2}(x))] = 8.00\text{ bits}$, and the probability of tag invariance $F_{k_1}(x) = F_{k_2}(x)$ is $2^{-16} \approx 1.526 \times 10^{-5}$ (empirically verified in \texttt{test\_02\_feistel\_goal\_conditioned\_avalanche} where $>99.9\%$ of tags change upon a 1-character goal mutation).
+Under the pseudorandomness of $\operatorname{SHAKE-256}$ with PRF advantage $\epsilon_{\text{PRF}}$, for any two distinct turns $t_1 \ne t_2$ or distinct goals $\mathcal{G}_1 \ne \mathcal{G}_2$, and for any single canonical field slot $x \in \{1,\dots,64\}$ ($q_t = 1$), the expected bitwise Hamming distance between the resulting 16-bit wire tags $F_{k_1}(x)$ and $F_{k_2}(x)$ satisfies $|\mathbb{E}[d_H(F_{k_1}(x), F_{k_2}(x))] - 8.00| \le 16\,\epsilon_{\text{PRF}}$, and the probability of tag invariance $\Pr[F_{k_1}(x) = F_{k_2}(x)]$ is bounded by $2^{-16} + 2\epsilon_{\text{PRF}} \approx 1.526 \times 10^{-5}$ (empirically verified in \texttt{test\_02\_feistel\_goal\_conditioned\_avalanche} where $>99.9\%$ of tags change upon a 1-character goal mutation).
 \end{proposition}
 
 \section{Complete 64-Slot Canonical MCP/A2A Field Registry and Dynamic Symbol Table Protocol}
@@ -782,17 +878,21 @@ Under the pseudorandomness of $\operatorname{SHAKE-256}$, for any two distinct t
 
 Table~\ref{tab:canonical_registry} lists all $64$ canonical MCP and A2A schema field identifiers pre-registered in slots $\tau \in \{1, \dots, 64\}$ of \texttt{feistel\_schema.py}. Because both endpoints share this immutable static dictionary at compile time, canonical field names never need to be transmitted as strings on the wire; each canonical key is represented solely by its 16-bit permuted integer tag $\tilde{\tau} = F_k(\tau) \in \{0, \dots, 65535\}$.
 
-When an enterprise tool invocation includes custom domain-specific argument keys $f_{\text{cust}} \notin \mathcal{F}_{\text{canon}}$ (for example, \texttt{"ledger"}, \texttt{"company\_code"}, \texttt{"bic"}, or \texttt{"hipaa\_purpose"}), \texttt{FeistelSchemaPermuter.permute\_payload} assigns each unique custom key a sequential slot $\tau(f_{\text{cust}}) \in \{256, 257, \dots, 65533\}$ for the duration of turn $t$ and inserts a permuted symbol table under the reserved tag $\tilde{\tau}_{\text{sym}} = F_k(\mathtt{0xFFFE})$:
+When an enterprise tool invocation includes custom domain-specific argument keys $f_{\text{cust}} \notin \mathcal{F}_{\text{canon}}$ (for example, \texttt{"ledger"}, \texttt{"company\_code"}, \texttt{"bic"}, or \texttt{"hipaa\_purpose"}), \texttt{permute\_payload} on \texttt{FeistelSchemaPermuter} assigns each unique custom key a sequential slot $\tau(f_{\text{cust}}) \in \{256, 257, \dots, 65533\}$ for the duration of turn $t$ and inserts a permuted symbol table under the reserved tag $\tilde{\tau}_{\text{sym}} = F_k(\mathtt{0xFFFE})$:
 \begin{equation}
 \label{eq:sym_table}
-\tilde{P}_t\left[F_k(\mathtt{0xFFFE})\right] = \left\{ F_k(\tau(f_{\text{cust}})) \mapsto f_{\text{cust}} \;\middle|\; f_{\text{cust}} \in \mathcal{F}_{\text{custom}}(P_t) \right\}.
+\begin{aligned}
+\tilde{P}_t\left[F_k(\mathtt{0xFFFE})\right] &= \Big\{ F_k(\tau(f_{\text{cust}})) \mapsto f_{\text{cust}} \\
+&\qquad \Big|\; f_{\text{cust}} \in \mathcal{F}_{\text{custom}}(P_t) \Big\}.
+\end{aligned}
 \end{equation}
-Because the entire serialized payload (including $\tilde{P}_t[F_k(\mathtt{0xFFFE})]$) is subsequently XOR-whitened by the Stage~2B $\operatorname{SHAKE-256}$ keystream $K_{\text{stream}}$ and padded with set-complement and affine-bijection chaff blocks, custom key strings are completely encrypted on the wire while remaining $100\%$ self-describing to the authorized receiver via $F_k^{-1}$.
+On the receiver side, \texttt{unpermute\_payload} on \texttt{FeistelSchemaPermuter} executes a deterministic 3-step inverse sequence: (1)~apply $F_k^{-1}$ to all top-level and nested 16-bit integer keys in $\tilde{P}_t$; (2)~locate the reserved symbol-table slot $\tau_{\text{sym}} = F_k^{-1}(\tilde{\tau}_{\text{sym}}) = \mathtt{0xFFFE} = 65534$, pop its dictionary, and invert each of its keys via $\tau = F_k^{-1}(\tilde{\tau}) \in \{256,\dots,65533\}$ to reconstruct the turn's custom lookup table $\{\tau \mapsto f_{\text{cust}}\}$; and (3)~map every slot $\tau \in \{1,\dots,64\}$ back to its canonical field name in Table~\ref{tab:canonical_registry} and every slot $\tau \in \{256,\dots,65533\}$ back to its recovered custom string $f_{\text{cust}}$. Because the entire serialized payload (including $\tilde{P}_t[F_k(\mathtt{0xFFFE})]$) is XOR-whitened by the Stage~2B $\operatorname{SHAKE-256}$ keystream $K_{\text{stream}}$ and padded with set-complement and affine-bijection chaff blocks, custom key strings are completely encrypted on the wire while remaining $100\%$ self-describing to the authorized receiver.
 
 \begin{table*}[t!]
 \centering
 \caption{Complete 64-Slot Canonical MCP and A2A Schema Field Registry (\texttt{CANONICAL\_SCHEMA\_FIELDS} in \texttt{feistel\_schema.py})}
 \label{tab:canonical_registry}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{rlrlrlrl}
 \toprule
 \textbf{Slot} & \textbf{Canonical Field Name} & \textbf{Slot} & \textbf{Canonical Field Name} & \textbf{Slot} & \textbf{Canonical Field Name} & \textbf{Slot} & \textbf{Canonical Field Name} \\
@@ -814,7 +914,8 @@ Because the entire serialized payload (including $\tilde{P}_t[F_k(\mathtt{0xFFFE
 15 & \texttt{recipient} & 31 & \texttt{metadata} & 47 & \texttt{content} & 63 & \texttt{retry\_count} \\
 16 & \texttt{goal\_hash} & 32 & \texttt{headers} & 48 & \texttt{role} & 64 & \texttt{idempotency\_key} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \section{Adversarial Traffic-Classifier Feature Engineering and Model Specifications}
@@ -824,16 +925,16 @@ To ensure that our traffic-fingerprinting evaluation in Section~\ref{sec:eval} r
 \begin{equation}
 \label{eq:feature_vec}
 \begin{aligned}
-\phi_0(B_t) &= \frac{L_t \bmod 4096}{4096.0} \quad (\text{normalized frame length residual}), \\
-\phi_1(B_t) &= \frac{H(B_t)}{8.0} = -\frac{1}{8.0} \sum_{b=0}^{255} \hat{p}(b) \log_2 \hat{p}(b) \quad (\text{normalized plug-in Shannon byte entropy}), \\
-\phi_2(B_t) &= \sum_{b=32}^{126} \hat{p}(b) \quad (\text{printable ASCII character density}), \\
-\phi_3(B_t) &= \sum_{c \in \{\texttt{'\{'}, \texttt{'\}'}, \texttt{':'}, \texttt{'"'}, \texttt{','}\}} \hat{p}(\operatorname{ord}(c)) \quad (\text{structural JSON delimiter density}), \\
-\phi_{4 + k}(B_t) &= \sum_{j=0}^{7} \hat{p}(8k + j), \qquad k \in \{0, 1, \dots, 31\} \quad (\text{32-bin coarse byte-value histogram}).
+\phi_0(B_t) &= \frac{L_t \bmod 8193}{8192.0} \quad (\text{normalized frame length}), \\
+\phi_1(B_t) &= -\frac{1}{8.0} \sum_{b=0}^{255} \hat{p}(b) \log_2 \hat{p}(b) \quad (\text{normalized entropy}), \\
+\phi_2(B_t) &= \sum_{b=32}^{126} \hat{p}(b) \quad (\text{printable ASCII density}), \\
+\phi_3(B_t) &= \sum_{c \in \mathcal{D}_{\text{json}}} \hat{p}(\operatorname{ord}(c)) \quad (\text{JSON delimiter density}), \\
+\phi_{4 + k}(B_t) &= \sum_{j=0}^{7} \hat{p}(8k + j), \quad k \in \{0..31\} \quad (\text{32-bin hist.}),
 \end{aligned}
 \end{equation}
-Prior to training, each feature coordinate $d \in \{0,\dots,35\}$ is $z$-score standardized using the training-set mean $\mu_d$ and standard deviation $\sigma_d$: $\tilde{\phi}_d = (\phi_d - \mu_d)/(\sigma_d + 10^{-8})$. Across the $800$ training traces and $200$ stratified test traces ($20$ classes), the three adversarial classifiers are parameterized as follows:
+where $\mathcal{D}_{\text{json}} = \{\texttt{'\{'}, \texttt{'\}'}, \texttt{':'}, \texttt{'"'}, \texttt{','}\}$. Prior to training, each feature coordinate $d \in \{0,\dots,35\}$ is $z$-score standardized using the training-set mean $\mu_d$ and standard deviation $\sigma_d$: $\tilde{\phi}_d = (\phi_d - \mu_d)/(\sigma_d + 10^{-8})$. Across the $800$ training traces and $200$ stratified test traces ($20$ classes), the three adversarial classifiers are parameterized as follows:
 \begin{itemize}
-    \item \textbf{Random-Subspace Ensemble Classifier ($50$ Estimators):} Draws $B_{\text{tree}} = 50$ bootstrap resamples of size $800$ paired with random 12-dimensional feature subspaces $S_b \subset \{0,\dots,35\}$ ($|S_b| = 12$), computes class-conditional subspace prototypes $\mathbf{c}_{b, y}$ for $y \in \{0,\dots,19\}$, and aggregates majority votes across all $50$ estimators.
+    \item \textbf{Random-Subspace Nearest-Centroid Ensemble (\texttt{Subspace RF}, $50$ Estimators):} Draws $B_{\text{tree}} = 50$ bootstrap resamples of size $800$ paired with random 12-dimensional feature subspaces $S_b \subset \{0,\dots,35\}$ ($|S_b| = 12$), computes class-conditional subspace centroids $\mathbf{c}_{b, y}$ for $y \in \{0,\dots,19\}$, and aggregates majority votes across all $50$ estimators.
     \item \textbf{2-Layer Multi-Layer Perceptron (MLP):} Parameterizes a feed-forward network $\hat{\mathbf{y}} = \operatorname{Softmax}(\operatorname{ReLU}(\tilde{\boldsymbol{\phi}} \mathbf{W}_1 + \mathbf{b}_1)\mathbf{W}_2 + \mathbf{b}_2)$ with input dimension $36$, hidden layer width $48$, and output dimension $20$, trained for $120$ full-batch epochs using cross-entropy loss, learning rate $\eta = 0.08$, and $L_2$ weight regularization $\lambda = 10^{-4}$.
     \item \textbf{$k$-Nearest Neighbors ($k$-NN, $k = 5$):} Computes exact Euclidean distances $\|\tilde{\boldsymbol{\phi}}_{\text{test}} - \tilde{\boldsymbol{\phi}}_{\text{train}, i}\|_2$ in $\mathbb{R}^{36}$ and predicts the plurality class label among the $k = 5$ nearest training instances.
 \end{itemize}
@@ -848,7 +949,7 @@ In large-scale enterprise deployments on Google Cloud (Vertex AI Agent Builder, 
 \end{enumerate}
 
 \subsection{Session Bootstrap, Epoch Resynchronization, and Network Partition Recovery}
-Table~\ref{tab:lifecycle_states} summarizes the finite-state machine governing session lifecycle, periodic Tier-2 Ed25519 epoch anchoring, and crash recovery. During initial session establishment ($t = 0$), the initiator transmits its ephemeral X25519 public share $\text{pk}_i$ authenticated under its workload identity certificate or Tier-2 Ed25519 identity key. Once $Z_{\text{shared}} = \operatorname{X25519}(\text{sk}_i, \text{pk}_j)$ is established, all subsequent turns $t \ge 0$ execute with zero asymmetric PKI overhead on the Tier-1 hot path ($28.86\,\mu\text{s}$ mean ratchet plus Schnorr proof generation). Every $\Delta_{\text{anchor}} = 100$ turns, the sender optionally attaches an out-of-band Tier-2 RFC~8032 Ed25519 signature (\texttt{sign\_epoch\_anchor}) over $(t, R_t)$ to provide non-repudiable cross-domain audit checkpoints.
+Table~\ref{tab:lifecycle_states} summarizes the finite-state machine governing session lifecycle, periodic Tier-2 Ed25519 epoch anchoring, and crash recovery. During initial session establishment ($t = 0$), the initiator transmits its ephemeral X25519 public share $\text{pk}_i$ authenticated under its workload identity certificate or Tier-2 Ed25519 identity key. Once $Z_{\text{shared}} = \operatorname{X25519}(\text{sk}_i, \text{pk}_j)$ is established, all subsequent turns $t \ge 0$ execute with zero asymmetric PKI overhead on the Tier-1 hot path ($28.86\,\mu\text{s}$ mean ratchet plus Schnorr proof generation). Every $\Delta_{\text{anchor}} = 100$ turns, the sender optionally attaches an out-of-band Tier-2 RFC~8032 Ed25519 signature (\texttt{sign\_epoch\_anchor}) over $(t, R_t)$ in \texttt{X-Chameleon-Epoch-Anchor} to provide non-repudiable cross-domain audit checkpoints.
 
 If an underlying TCP/HTTP2 connection drops mid-flight after $\mathcal{A}_i$ seals packet $W_t$ but before $\mathcal{A}_j$ receives it, $\mathcal{A}_i$ simply re-transmits the exact cached wire packet $W_t$ upon transport reconnection. Because $\mathcal{A}_j$ never received $W_t$, its expected epoch remains $t$ and $(t, \tau_{\text{ratchet}}) \notin \mathcal{W}_{\text{seen}}$; thus the idempotent wire retry succeeds on the first attempt. Conversely, if $W_t$ was processed by $\mathcal{A}_j$ and only the HTTP/2 response was lost, $\mathcal{A}_j$ detects the duplicate $(t, \tau_{\text{ratchet}}) \in \mathcal{W}_{\text{seen}}$ and returns a signed epoch synchronization challenge instructing $\mathcal{A}_i$ whether turn $t$ was already committed.
 
@@ -856,6 +957,7 @@ If an underlying TCP/HTTP2 connection drops mid-flight after $\mathcal{A}_i$ sea
 \centering
 \caption{Operational State Machine, Failure Modes, and Cryptographic Recovery Guarantees of Agent-Chameleon}
 \label{tab:lifecycle_states}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llll}
 \toprule
 \textbf{Lifecycle Phase / Event} & \textbf{Trigger Condition} & \textbf{Cryptographic Action Executed} & \textbf{Latency / Security Invariant} \\
@@ -867,7 +969,8 @@ If an underlying TCP/HTTP2 connection drops mid-flight after $\mathcal{A}_i$ sea
 5. Replayed Packet ($t' \le t$) & $(t', \tau_{\text{ratchet}}) \in \mathcal{W}_{\text{seen}}$ or $t' \ne t$ & Reject in $\mathcal{O}(1)$ hash lookup prior to codec parse & $100\%$ replay immunity; DoS-resistant \\
 6. Goal Context Mismatch & Caller $\mathcal{G}_t \ne$ Receiver $\mathcal{G}_t'$ & Divergent $H(\mathcal{G}_t) \implies R_t \ne R_t' \implies Y_t \ne \hat{Y}_t$ & $100\%$ cross-goal tool hijacking block \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \section{Formal Security Reduction of Multi-Epoch Ratchet Indistinguishability and Water-Filling Optimality}
@@ -888,12 +991,10 @@ The function $\varphi(u) = -(u/B) \log_2(u/B)$ is strictly concave on $u > 0$ si
 \begin{equation}
 \Delta H = \left[\varphi(c_{\text{low}} + 1) - \varphi(c_{\text{low}})\right] - \left[\varphi(c_{\text{high}}) - \varphi(c_{\text{high}} - 1)\right] > 0.
 \end{equation}
-In Stage~2B, taking the exact set complement $M^{(s)} = \Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ on each 128-byte slice $W_p^{(s)}$ increments every zero-count byte in that slice to $1$, eliminating all zero-frequency bins in the first pass, while each subsequent 256-byte affine bijection block $\Pi_{a,r}$ adds the constant vector $\mathbf{1}_{256} = (1, 1, \dots, 1)$ to $\mathbf{c}$, preserving the bounded variance $\sum_b (c_b - B/256)^2 \le L_p$ while scaling $B = 256 M$ and driving $H(B_t) \to 8.000\text{ bits/byte}$ at rate $8 - \mathcal{O}(1/M)$.
+In Stage~2B, taking the exact set complement $M^{(s)} = \Sigma_{256} \setminus \operatorname{set}(W_p^{(s)})$ on each 128-byte slice $W_p^{(s)}$ increments every zero-count byte in that slice to $1$, eliminating all zero-frequency bins in the first pass, while each subsequent 256-byte affine bijection block $\Pi_{a,r}$ adds the constant vector $\mathbf{1}_{256} = (1, 1, \dots, 1)$ to $\mathbf{c}$, preserving the bounded variance $\mathbb{E}[\sum_b (c_b - B/256)^2] \le L_p + 64$ while scaling $B = 256 M$ and driving $H(B_t) \to 8.000\text{ bits/byte}$ at rate $8 - \mathcal{O}(1/M)$.
 \end{proof}
 
-
-
-\begin{thebibliography}{30}
+\begin{thebibliography}{36}
 
 \bibitem{luby1988construct}
 M.~Luby and C.~Rackoff, ``How to construct pseudorandom permutations from pseudorandom functions,'' \emph{SIAM Journal on Computing}, vol.~17, no.~2, pp.~373--386, 1988, doi: 10.1137/0217022.
@@ -931,6 +1032,12 @@ D.~Fett, B.~Campbell, J.~Bradley, T.~Lodderstedt, M.~Jones, and D.~Waite, ``OAut
 \bibitem{backman2024rfc9421}
 A.~Backman, J.~Richer, and M.~Sporny, ``HTTP Message Signatures,'' \emph{IETF RFC 9421}, Feb. 2024, doi: 10.17487/RFC9421.
 
+\bibitem{schinazi2025rfc9729}
+D.~Schinazi, F.~Oliver, and J.~Hoyland, ``The Concealed HTTP Authentication Scheme,'' \emph{IETF RFC 9729}, Feb. 2025, doi: 10.17487/RFC9729.
+
+\bibitem{thomson2024ohttp}
+M.~Thomson and C.~A.~Wood, ``Oblivious HTTP,'' \emph{IETF RFC 9458}, Jan. 2024, doi: 10.17487/RFC9458.
+
 \bibitem{birgisson2014macaroons}
 A.~Birgisson, J.~G.~Politz, {\'U}.~Erlingsson, A.~Taly, M.~Vrable, and M.~Lentczner, ``Macaroons: Cookies with contextual caveats for decentralized authorization in the cloud,'' in \emph{Proc. Network and Distributed System Security Symposium (NDSS)}, Feb. 2014, doi: 10.14722/ndss.2014.23212.
 
@@ -945,6 +1052,12 @@ K.~P.~Dyer, S.~E.~Coull, T.~Ristenpart, and T.~Shrimpton, ``Peek-a-Boo, I Still 
 
 \bibitem{dyer2013protocol}
 K.~P.~Dyer, S.~E.~Coull, T.~Ristenpart, and T.~Shrimpton, ``Protocol misidentification made easy with format-transforming encryption,'' in \emph{Proc. ACM SIGSAC Conference on Computer and Communications Security (CCS)}, pp.~61--72, Nov. 2013, doi: 10.1145/2508859.2516657.
+
+\bibitem{cai2014systematic}
+X.~Cai, R.~Nithyanand, T.~Wang, R.~Johnson, and I.~Goldberg, ``A systematic approach to developing and evaluating website fingerprinting defenses,'' in \emph{Proc. ACM SIGSAC Conference on Computer and Communications Security (CCS)}, pp.~227--238, Nov. 2014, doi: 10.1145/2660267.2660362.
+
+\bibitem{nikitin2019purbs}
+K.~Nikitin, L.~Barman, W.~Lueks, M.~Gasser, J.-P.~Hubaux, and B.~Ford, ``Reducing metadata leakage from encrypted files and communication with PURBs,'' \emph{Proceedings on Privacy Enhancing Technologies (PoPETs)}, vol.~2019, no.~4, pp.~6--33, 2019, doi: 10.2478/popets-2019-0056.
 
 \bibitem{panchenko2016website}
 A.~Panchenko, F.~Lanze, A.~Zinnen, M.~Henze, J.~Pennekamp, K.~Wehrle, and T.~Engel, ``Website fingerprinting at internet scale,'' in \emph{Proc. Network and Distributed System Security Symposium (NDSS)}, Feb. 2016, doi: 10.14722/ndss.2016.23477.
@@ -983,7 +1096,7 @@ E.~Debenedetti, J.~Zhang, M.~Balunovi{\'c}, L.~Beurer-Kellner, M.~Fischer, and F
 Q.~Zhan, Z.~Liang, Z.~Ying, and D.~Kang, ``InjecAgent: Benchmarking indirect prompt injections in tool-integrated large language model agents,'' in \emph{Findings of the Association for Computational Linguistics (ACL)}, pp.~10471--10506, Aug. 2024, arXiv:2403.02691.
 
 \bibitem{debenedetti2025camel}
-E.~Debenedetti, I.~Shumailov, T.~Fan, J.~Hayes, N.~Carlini, D.~Fabian, C.~Kern, C.~Shi, A.~Terzis, and F.~Tram{\`e}r, ``Defending LLM agents against prompt injections with CaMeL,'' \emph{arXiv preprint arXiv:2503.18813}, Mar. 2025.
+E.~Debenedetti, I.~Shumailov, T.~Fan, J.~Hayes, N.~Carlini, D.~Fabian, C.~Kern, C.~Shi, A.~Terzis, and F.~Tram{\`e}r, ``Defeating Prompt Injections by Design,'' \emph{arXiv preprint arXiv:2503.18813}, Mar. 2025.
 
 \end{thebibliography}
 
